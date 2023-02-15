@@ -4,6 +4,7 @@ import { Collection } from 'discord.js';
 import { COMMANDS_FOLDER } from "../../constants/app-constants.js";
 import { getGuildSlashCommands, postGuildSlashCommand } from '../../api/discord-api.js';
 import { squareIt } from '../../utils/console.js';
+import { COMMAND_OVERRIDE } from '../../constants/env-constants.js';
 
 export async function loadLocalCommands() {
     const commands = new Collection();
@@ -14,7 +15,6 @@ export async function loadLocalCommands() {
         const filePath = path.join(commandsPath, file);
         const command = (await import(`../${file}`)).default;
 
-        // Set a new item in the Collection with the key as the command name and the value as the exported module
         if ('data' in command && 'execute' in command) {
             commands.set(command.data.name, command);
         } else {
@@ -45,6 +45,7 @@ async function compareLocalAndServerCommand(localCommand, serverCommandNames) {
         await postGuildSlashCommand(localCommand);
         return `Installing command <${localCommand['name']}>`;
     } else {
-        return `Command <${localCommand['name']}> is already installed.`;
+        if (COMMAND_OVERRIDE) await postGuildSlashCommand(localCommand);
+        return `Command <${localCommand['name']}> is ${COMMAND_OVERRIDE ? "updated" : "already installed"}`;
     }
 }
