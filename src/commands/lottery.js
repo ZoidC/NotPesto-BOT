@@ -35,6 +35,17 @@ const Lottery = {
                         .setRequired(true)
                 )
         )
+        // Remove
+        .addSubcommand(sc =>
+            sc.setName('remove')
+                .setDescription('Remove a player from my lottery')
+                // <Player>
+                .addUserOption(option =>
+                    option.setName('user')
+                        .setDescription('Set the user to remove')
+                        .setRequired(true)
+                )
+        )
         // Allow
         .addSubcommand(sc =>
             sc.setName('allow')
@@ -86,7 +97,19 @@ const Lottery = {
                 // user.avatar
                 option = interaction.options.getUser('user');
                 break;
+            case "remove":
+                // user.id
+                // user.username # user.discriminator
+                // user.avatar
+                option = interaction.options.getUser('user');
+                break;
             case "allow":
+                // user.id
+                // user.username # user.discriminator
+                // user.avatar
+                option = interaction.options.getUser('user');
+                break;
+            case "disallow":
                 // user.id
                 // user.username # user.discriminator
                 // user.avatar
