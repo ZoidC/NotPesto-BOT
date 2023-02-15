@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 
-const Ping = {
+const Cgn = {
     data: new SlashCommandBuilder()
         .setName('cgn')
         .setDescription('Best Desc'),
@@ -9,4 +9,4 @@ const Ping = {
     }
 };
 
-export default Ping;
+export default Cgn;

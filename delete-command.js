@@ -1,4 +1,9 @@
-import { DeleteCommand } from "./commands/delete/index.js";
+/**
+ * The purpose of this script is to notify the Discord server.
+ * (Not delete the local command file)
+ */
+
+import { deleteGuildSlashCommand } from "./src/api/discord-api.js";
 
 // Check to see if the -f argument is present
 const indexId = process.argv.indexOf('--id');
@@ -15,4 +20,4 @@ if (!isFlagAndValue) {
 }
 
 const commandId = process.argv[indexId + 1];
-DeleteCommand(process.env.APP_ID, process.env.GUILD_ID, commandId);
+await deleteGuildSlashCommand(commandId);

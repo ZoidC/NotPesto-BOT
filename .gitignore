@@ -1,3 +1,10 @@
+# Base
 node_modules
 .env
+
+# App
 logo
+
+# Test
+test.js
+dump

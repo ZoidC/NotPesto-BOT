@@ -14,4 +14,4 @@ Update code to Global Slash Command : https://discordjs.guide/creating-your-bot/
 - `npm start`
 
 ## How to delete a BOT command in Discord
-- `node delete-command --id <id>`
+- `node delete-command --id <command_id>`

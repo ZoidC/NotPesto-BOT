@@ -1,0 +1,1 @@
+export const COMMANDS_FOLDER = 'src/commands';
