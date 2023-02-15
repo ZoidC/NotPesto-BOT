@@ -1,0 +1,21 @@
+{
+    "name": "notpesto-bot",
+    "version": "0.1.0",
+    "description": "Like said, it's not Pesto.",
+    "main": "app.js",
+    "type": "module",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js"
+    },
+    "author": "ZoidC",
+    "license": "MIT",
+    "dependencies": {
+        "discord.js": "^14.7.1",
+        "dotenv": "^16.0.3",
+        "node-fetch": "^3.3.0"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.20"
+    }
+}
