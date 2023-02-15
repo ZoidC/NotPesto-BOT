@@ -1,9 +1,10 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { createLottery } from '../api/lottery-api.js';
+import { addPlayerLottery, closeLottery, createLottery } from '../api/lottery-api.js';
 
 /**
  * /lottery create <price>
  * /lottery add <player>
+ * /lottery remove <player>
  * /lottery allow <player>
  * /lottery disallow <player>
  * /lottery show
@@ -83,11 +84,12 @@ const Lottery = {
         const guildId = interaction.guildId;
         const userId = interaction.user.id;
         let option;
+        let res;
 
         switch (sc) {
             case "create":
                 option = interaction.options.getInteger('price');
-                const res = await createLottery(guildId, userId, option);
+                res = await createLottery(guildId, userId, option);
                 console.log(res);
                 await interaction.reply(res.ok ? "Lottery has been created" : res.message);
                 break;
@@ -96,6 +98,8 @@ const Lottery = {
                 // user.username # user.discriminator
                 // user.avatar
                 option = interaction.options.getUser('user');
+                res = await addPlayerLottery(guildId, userId, option);
+                console.log(res);
                 break;
             case "remove":
                 // user.id
@@ -119,7 +123,9 @@ const Lottery = {
 
                 break;
             case "roll":
-
+                res = await closeLottery(guildId, userId);
+                console.log(res);
+                await interaction.reply(res.ok ? "Pesto won ?!" : res.message);
                 break;
             default:
                 await interaction.reply('Lottery what ?!');
