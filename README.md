@@ -1,5 +1,6 @@
 # Not Pesto
-Doc : https://discordjs.guide/
+DiscordJS Doc : https://discordjs.guide/
+Discord Doc/Api : https://discord.com/developers/docs
 
 ## How to add the BOT to a Discord
 - Generate an url with specific permission here : https://discord.com/developers/applications (OAuth2 / URL Generator)
@@ -14,4 +15,5 @@ Update code to Global Slash Command : https://discordjs.guide/creating-your-bot/
 - `npm start`
 
 ## How to delete a BOT command in Discord
+- `node delete-command --all`
 - `node delete-command --id <command_id>`

@@ -1,5 +1,7 @@
 import { keyv } from "../db/keyv-db.js";
-import { KEYV_LOTTERIES_PREFIX } from "../constants/app-constants.js";
+import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX } from "../constants/app-constants.js";
+import { getGuildUserById } from "./discord-api.js";
+import { buildAvatarUrl } from "../utils/discord-tools.js";
 
 // KEYV_LOTTERIES_PREFIX + "_" + GUILD_ID + "_" + USER_ID
 // [
@@ -103,10 +105,127 @@ export async function createLottery(guildId, userId, price) {
     }
 }
 
-export async function addPlayerLottery(guildId, userId, userToAdd) {
+export async function addPlayerLottery(guildId, userId, userToAdd, lotteryOwner) {
     const res = { ok: true, data: null, message: "" };
+    let current;
 
-    // ..
+    try {
+        current = await getLotteries(guildId, lotteryOwner ? lotteryOwner.id : userId);
+    } catch (e) {
+        res.ok = false;
+        res.message = `Could not get ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lotteries`;
+
+        return res;
+    }
+
+    if (!current) {
+        res.ok = false;
+        res.message = `Could not add <@${userToAdd.id}> to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, ${lotteryOwner ? `<@${lotteryOwner.id}>` : "you"} don't have any Lottery`;
+    } else {
+        const activeLottery = hasActiveLottery(current);
+
+        if (!activeLottery) {
+            res.ok = false;
+            res.message = `Could not add <@${userToAdd.id}> to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, ${lotteryOwner ? `<@${lotteryOwner.id}>` : "you"} don't have any active Lottery`;
+
+            return res;
+        }
+
+        const isAllowed = activeLottery.allowedUsers.includes(userId);
+
+        if (!isAllowed) {
+            res.ok = false;
+            res.message = `Could not add <@${userToAdd.id}> to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, you are not allowed to do it`;
+
+            return res;
+        }
+
+        const isAlreadyIn = activeLottery.players.includes(userToAdd.id);
+
+        if (isAlreadyIn) {
+            res.ok = false;
+            res.message = `Could not add <@${userToAdd.id}> to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, he is already in it`;
+
+            return res;
+        }
+
+        activeLottery.players.push(userToAdd.id);
+
+        const newLotteries = updateLotteries(current, activeLottery);
+
+        try {
+            res.ok = await setLotteries(guildId, lotteryOwner ? lotteryOwner.id : userId, newLotteries);
+            res.data = activeLottery;
+        } catch (e) {
+            res.ok = false;
+            res.message = `Could not set ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lotteries`;
+        }
+
+        return res;
+    }
+}
+
+export async function showLottery(guildId, userId, userToTarget) {
+    const res = { ok: true, data: null, message: "" };
+    let current;
+
+    try {
+        current = await getLotteries(guildId, userToTarget ? userToTarget.id : userId);
+    } catch (e) {
+        res.ok = false;
+        res.message = `Could not get ${userToTarget ? `<@${userToTarget.id}>'s` : "the"} Lotteries`;
+
+        return res;
+    }
+
+    if (!current) {
+        res.ok = false;
+        res.message = `Could not show ${userToTarget ? `<@${userToTarget.id}>'s` : "the"} Lottery, ${userToTarget ? `<@${userToTarget.id}>` : "you"} don't have any Lottery`;
+    } else {
+        const activeLottery = hasActiveLottery(current);
+
+        if (!activeLottery) {
+            res.ok = false;
+            res.message = `Could not show ${userToTarget ? `<@${userToTarget.id}>'s` : "the"} Lottery, ${userToTarget ? `<@${userToTarget.id}>` : "you"} don't have any active Lottery`;
+
+            return res;
+        }
+
+        const owner = await getGuildUserById(activeLottery.owner);
+
+        const createdFields = await Promise.all(activeLottery.players.map(async (playerId) => {
+            const playerGuilds = await getGuildUserById(playerId);
+            // buildAvatarUrl(playerGuilds.user.id, playerGuilds.user.avatar)
+            return {
+                name: `${playerGuilds.nick ?? playerGuilds.user.username}`,
+                value: `${playerGuilds.user.username}#${playerGuilds.user.discriminator}`,
+            };
+        }));
+
+        res.data = {
+            color: EMBEDS_COLOR,
+            title: "List of players",
+            // url: 'https://discord.js.org',
+            author: {
+                name: `${owner.nick} (${owner.user.username}#${owner.user.discriminator})`,
+                icon_url: buildAvatarUrl(owner.user.id, owner.user.avatar),
+                // url: 'https://discord.js.org',
+            },
+            // description: 'List of players',
+            thumbnail: {
+                url: 'https://i.imgur.com/aVq1dRh.png',
+            },
+            fields: createdFields,
+            // image: {
+            //     url: 'https://i.imgur.com/aVq1dRh.png',
+            // },
+            // timestamp: new Date().toISOString(),
+            // footer: {
+            //     text: 'Some footer text here',
+            //     icon_url: 'https://i.imgur.com/aVq1dRh.png',
+            // }
+        };
+    }
 
     return res;
 }
