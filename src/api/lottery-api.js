@@ -294,6 +294,108 @@ export async function showLottery(guildId, userId, userToTarget) {
     return res;
 }
 
+export async function allowPlayerLottery(guildId, userId, userToAllow) {
+    const res = { ok: true, data: null, message: "" };
+    let current;
+
+    try {
+        current = await getLotteries(guildId, userId);
+    } catch (e) {
+        res.ok = false;
+        res.message = `Could not get the Lotteries`;
+
+        return res;
+    }
+
+    if (!current) {
+        res.ok = false;
+        res.message = `Could not allow <@${userToAllow.id}> to the Lottery, you don't have any Lottery`;
+    } else {
+        const activeLottery = hasActiveLottery(current);
+
+        if (!activeLottery) {
+            res.ok = false;
+            res.message = `Could not allow <@${userToAllow.id}> to the Lottery, you don't have any active Lottery`;
+
+            return res;
+        }
+
+        const isAlreadyAllowed = activeLottery.allowedUsers.includes(userToAllow.id);
+
+        if (isAlreadyAllowed) {
+            res.ok = false;
+            res.message = `Could not allow <@${userToAllow.id}> to the Lottery, he is already allowed`;
+
+            return res;
+        }
+
+        activeLottery.allowedUsers.push(userToAllow.id);
+
+        const newLotteries = updateLotteries(current, activeLottery);
+
+        try {
+            res.ok = await setLotteries(guildId, userId, newLotteries);
+            res.data = activeLottery;
+        } catch (e) {
+            res.ok = false;
+            res.message = `Could not set the Lotteries`;
+        }
+
+        return res;
+    }
+}
+
+export async function disallowPlayerLottery(guildId, userId, userToDisallow) {
+    const res = { ok: true, data: null, message: "" };
+    let current;
+
+    try {
+        current = await getLotteries(guildId, userId);
+    } catch (e) {
+        res.ok = false;
+        res.message = `Could not get the Lotteries`;
+
+        return res;
+    }
+
+    if (!current) {
+        res.ok = false;
+        res.message = `Could not disallow <@${userToDisallow.id}> to the Lottery, you don't have any Lottery`;
+    } else {
+        const activeLottery = hasActiveLottery(current);
+
+        if (!activeLottery) {
+            res.ok = false;
+            res.message = `Could not disallow <@${userToDisallow.id}> to the Lottery, you don't have any active Lottery`;
+
+            return res;
+        }
+
+        const isAllowed = activeLottery.allowedUsers.includes(userToDisallow.id);
+
+        if (!isAllowed) {
+            res.ok = false;
+            res.message = `Could not disallow <@${userToDisallow.id}> to the Lottery, he is not even allowed`;
+
+            return res;
+        }
+
+        activeLottery.allowedUsers = activeLottery.allowedUsers.filter((e) => e !== userToDisallow.id);
+
+        const newLotteries = updateLotteries(current, activeLottery);
+
+        try {
+            res.ok = await setLotteries(guildId, userId, newLotteries);
+            res.data = activeLottery;
+        } catch (e) {
+            res.ok = false;
+            res.message = `Could not set the Lotteries`;
+        }
+
+        return res;
+    }
+}
+
 export async function closeLottery(guildId, userId) {
     const res = { ok: true, data: null, message: "" };
     let current;

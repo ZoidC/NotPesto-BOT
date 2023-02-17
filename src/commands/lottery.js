@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { addPlayerLottery, closeLottery, createLottery, removePlayerLottery, showLottery } from '../api/lottery-api.js';
+import { addPlayerLottery, allowPlayerLottery, closeLottery, createLottery, disallowPlayerLottery, removePlayerLottery, showLottery } from '../api/lottery-api.js';
 
 const Lottery = {
     data: new SlashCommandBuilder()
@@ -127,11 +127,15 @@ const Lottery = {
                 break;
             case "allow":
                 option = interaction.options.getUser('user');
-                await interaction.reply("WIP : Command not done yet");
+                res = await allowPlayerLottery(guildId, userId, option);
+                if (!res.ok) console.log(res);
+                await interaction.reply(res.ok ? `<@${option.id}> has been allowed to update your Lottery` : res.message);
                 break;
             case "disallow":
                 option = interaction.options.getUser('user');
-                await interaction.reply("WIP : Command not done yet");
+                res = await disallowPlayerLottery(guildId, userId, option);
+                if (!res.ok) console.log(res);
+                await interaction.reply(res.ok ? `<@${option.id}> has been disallowed to update your Lottery` : res.message);
                 break;
             case "show":
                 option = interaction.options.getUser('user');
