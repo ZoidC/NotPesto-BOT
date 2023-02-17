@@ -1,15 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { addPlayerLottery, closeLottery, createLottery, showLottery } from '../api/lottery-api.js';
+import { addPlayerLottery, closeLottery, createLottery, removePlayerLottery, showLottery } from '../api/lottery-api.js';
 
-/**
- * /lottery create <price>
- * /lottery add <player>
- * /lottery remove <player>
- * /lottery allow <player>
- * /lottery disallow <player>
- * /lottery show
- * /lottery roll
- */
 const Lottery = {
     data: new SlashCommandBuilder()
         .setName('lottery')
@@ -38,24 +29,29 @@ const Lottery = {
                 // <Player> (optional)
                 .addUserOption(option =>
                     option.setName('lottery-owner')
-                        .setDescription('Set the lottery owner to add a user to his lottery')
+                        .setDescription('Set the targeted lottery via the owner')
                 )
         )
         // Remove
         .addSubcommand(sc =>
             sc.setName('remove')
-                .setDescription('Remove a player from my lottery')
+                .setDescription('Remove a player from a lottery')
                 // <Player>
                 .addUserOption(option =>
                     option.setName('user')
                         .setDescription('Set the user to remove')
                         .setRequired(true)
                 )
+                // <Player> (optional)
+                .addUserOption(option =>
+                    option.setName('lottery-owner')
+                        .setDescription('Set the targeted lottery via the owner')
+                )
         )
         // Allow
         .addSubcommand(sc =>
             sc.setName('allow')
-                .setDescription('Allow another player to update my lottery')
+                .setDescription('Allow another user to update my lottery')
                 // <Player>
                 .addUserOption(option =>
                     option.setName('user')
@@ -66,7 +62,7 @@ const Lottery = {
         // Disallow
         .addSubcommand(sc =>
             sc.setName('disallow')
-                .setDescription('Disallow another player to update my lottery')
+                .setDescription('Disallow another user to update my lottery')
                 // <Player>
                 .addUserOption(option =>
                     option.setName('user')
@@ -106,19 +102,28 @@ const Lottery = {
             case "create":
                 option = interaction.options.getInteger('price');
                 res = await createLottery(guildId, userId, option);
-                console.log(res);
+                if (!res.ok) console.log(res);
                 await interaction.reply(res.ok ? "Lottery has been created" : res.message);
                 break;
             case "add":
                 option = interaction.options.getUser('user');
                 option2 = interaction.options.getUser('lottery-owner');
                 res = await addPlayerLottery(guildId, userId, option, option2);
-                console.log(res);
-                await interaction.reply(res.ok ? `<@${option.id}> has been added to ${option2 ? `<@${option2.id}>` : "the"} Lottery` : res.message);
+                if (!res.ok) console.log(res);
+                await interaction.reply(res.ok ? {
+                    content: `<@${option.id}> has been added to ${option2 ? `<@${option2.id}>'s` : "the"} Lottery`,
+                    embeds: [res.data]
+                } : res.message);
                 break;
             case "remove":
                 option = interaction.options.getUser('user');
-                await interaction.reply("WIP : Command not done yet");
+                option2 = interaction.options.getUser('lottery-owner');
+                res = await removePlayerLottery(guildId, userId, option, option2);
+                if (!res.ok) console.log(res);
+                await interaction.reply(res.ok ? {
+                    content: `<@${option.id}> has been removed from ${option2 ? `<@${option2.id}>'s` : "the"} Lottery`,
+                    embeds: [res.data]
+                } : res.message);
                 break;
             case "allow":
                 option = interaction.options.getUser('user');
@@ -131,12 +136,12 @@ const Lottery = {
             case "show":
                 option = interaction.options.getUser('user');
                 res = await showLottery(guildId, userId, option);
-                console.log(res);
+                if (!res.ok) console.log(res);
                 await interaction.reply(res.ok ? { embeds: [res.data] } : res.message);
                 break;
             case "roll":
                 res = await closeLottery(guildId, userId);
-                console.log(res);
+                if (!res.ok) console.log(res);
                 await interaction.reply(res.ok ? "WIP : Pesto won ?!" : res.message);
                 break;
             default:

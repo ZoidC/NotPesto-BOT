@@ -42,6 +42,43 @@ async function setLotteries(guildId, userId, data) {
     return await keyv.set(lotteries, data);
 }
 
+async function buildEmbedsLottery(lottery) {
+    const owner = await getGuildUserById(lottery.owner);
+
+    const createdFields = await Promise.all(lottery.players.map(async (playerId) => {
+        const playerGuilds = await getGuildUserById(playerId);
+        // buildAvatarUrl(playerGuilds.user.id, playerGuilds.user.avatar)
+        return {
+            name: `${playerGuilds.nick ?? playerGuilds.user.username}`,
+            value: `${playerGuilds.user.username}#${playerGuilds.user.discriminator}`,
+        };
+    }));
+
+    return {
+        color: EMBEDS_COLOR,
+        title: "List of players",
+        // url: 'https://discord.js.org',
+        author: {
+            name: `${owner.nick} (${owner.user.username}#${owner.user.discriminator})`,
+            icon_url: buildAvatarUrl(owner.user.id, owner.user.avatar),
+            // url: 'https://discord.js.org',
+        },
+        // description: 'Some description there here',
+        thumbnail: {
+            url: 'https://i.imgur.com/aVq1dRh.png',
+        },
+        fields: createdFields,
+        // image: {
+        //     url: 'https://i.imgur.com/aVq1dRh.png',
+        // },
+        // timestamp: new Date().toISOString(),
+        // footer: {
+        //     text: 'Some footer text here',
+        //     icon_url: 'https://i.imgur.com/aVq1dRh.png',
+        // }
+    };
+}
+
 // async function clearLotteries() {
 //     const lotteries = `${KEYV_LOTTERIES_PREFIX}_${guildId}_${userId}`;
 //     return await keyv.clear(lotteries);
@@ -67,7 +104,7 @@ export async function createLottery(guildId, userId, price) {
         updateDate: newDate,
         guild: guildId,
         owner: userId,
-        allowedUsers: [userId],
+        allowedUsers: [],
         players: [],
         price: price
     };
@@ -131,7 +168,7 @@ export async function addPlayerLottery(guildId, userId, userToAdd, lotteryOwner)
             return res;
         }
 
-        const isAllowed = activeLottery.allowedUsers.includes(userId);
+        const isAllowed = activeLottery.owner === userId || activeLottery.allowedUsers.includes(userId);
 
         if (!isAllowed) {
             res.ok = false;
@@ -155,7 +192,67 @@ export async function addPlayerLottery(guildId, userId, userToAdd, lotteryOwner)
 
         try {
             res.ok = await setLotteries(guildId, lotteryOwner ? lotteryOwner.id : userId, newLotteries);
-            res.data = activeLottery;
+            res.data = await buildEmbedsLottery(activeLottery);
+        } catch (e) {
+            res.ok = false;
+            res.message = `Could not set ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lotteries`;
+        }
+
+        return res;
+    }
+}
+
+export async function removePlayerLottery(guildId, userId, userToRemove, lotteryOwner) {
+    const res = { ok: true, data: null, message: "" };
+    let current;
+
+    try {
+        current = await getLotteries(guildId, lotteryOwner ? lotteryOwner.id : userId);
+    } catch (e) {
+        res.ok = false;
+        res.message = `Could not get ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lotteries`;
+
+        return res;
+    }
+
+    if (!current) {
+        res.ok = false;
+        res.message = `Could not remove <@${userToRemove.id}> from ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, ${lotteryOwner ? `<@${lotteryOwner.id}>` : "you"} don't have any Lottery`;
+    } else {
+        const activeLottery = hasActiveLottery(current);
+
+        if (!activeLottery) {
+            res.ok = false;
+            res.message = `Could not remove <@${userToRemove.id}> from ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, ${lotteryOwner ? `<@${lotteryOwner.id}>` : "you"} don't have any active Lottery`;
+
+            return res;
+        }
+
+        const isAllowed = activeLottery.owner === userId || activeLottery.allowedUsers.includes(userId);
+
+        if (!isAllowed) {
+            res.ok = false;
+            res.message = `Could not remove <@${userToRemove.id}> from ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, you are not allowed to do it`;
+
+            return res;
+        }
+
+        const isIn = activeLottery.players.includes(userToRemove.id);
+
+        if (!isIn) {
+            res.ok = false;
+            res.message = `Could not remove <@${userToRemove.id}> from ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lottery, he is not in it`;
+
+            return res;
+        }
+
+        activeLottery.players = activeLottery.players.filter((e) => e !== userToRemove.id);
+
+        const newLotteries = updateLotteries(current, activeLottery);
+
+        try {
+            res.ok = await setLotteries(guildId, lotteryOwner ? lotteryOwner.id : userId, newLotteries);
+            res.data = await buildEmbedsLottery(activeLottery);
         } catch (e) {
             res.ok = false;
             res.message = `Could not set ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lotteries`;
@@ -191,40 +288,7 @@ export async function showLottery(guildId, userId, userToTarget) {
             return res;
         }
 
-        const owner = await getGuildUserById(activeLottery.owner);
-
-        const createdFields = await Promise.all(activeLottery.players.map(async (playerId) => {
-            const playerGuilds = await getGuildUserById(playerId);
-            // buildAvatarUrl(playerGuilds.user.id, playerGuilds.user.avatar)
-            return {
-                name: `${playerGuilds.nick ?? playerGuilds.user.username}`,
-                value: `${playerGuilds.user.username}#${playerGuilds.user.discriminator}`,
-            };
-        }));
-
-        res.data = {
-            color: EMBEDS_COLOR,
-            title: "List of players",
-            // url: 'https://discord.js.org',
-            author: {
-                name: `${owner.nick} (${owner.user.username}#${owner.user.discriminator})`,
-                icon_url: buildAvatarUrl(owner.user.id, owner.user.avatar),
-                // url: 'https://discord.js.org',
-            },
-            // description: 'List of players',
-            thumbnail: {
-                url: 'https://i.imgur.com/aVq1dRh.png',
-            },
-            fields: createdFields,
-            // image: {
-            //     url: 'https://i.imgur.com/aVq1dRh.png',
-            // },
-            // timestamp: new Date().toISOString(),
-            // footer: {
-            //     text: 'Some footer text here',
-            //     icon_url: 'https://i.imgur.com/aVq1dRh.png',
-            // }
-        };
+        res.data = await buildEmbedsLottery(activeLottery);
     }
 
     return res;
