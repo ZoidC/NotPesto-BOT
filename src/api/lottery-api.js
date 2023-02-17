@@ -99,7 +99,7 @@ async function buildEmbedsWinnersLottery(lottery, podium, amountTax) {
 
     return {
         color: EMBEDS_COLOR,
-        title: "List of winners",
+        title: `${podium.length ? "List of winners" : ""}`,
         // url: 'https://discord.js.org',
         author: {
             name: `${owner.nick ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
@@ -479,7 +479,7 @@ export async function closeLottery(guildId, userId, podiumSize, taxPercent) {
         const amountTax = totalAmount * taxPercent / 100;
         const amountWinners = totalAmount - amountTax;
         const winners = getXRandomItemsFromArray(activeLottery.players, realPodiumSize);
-        let buildMessage = "Congratulations to";
+        let buildMessage = `${winners.length ? "Congratulations to" : ""}`;
         const podium = winners.map((player, index, array) => {
             buildMessage += ` #${index + 1} <@${player}>`;
             return {
