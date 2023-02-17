@@ -2,6 +2,7 @@ import { keyv } from "../db/keyv-db.js";
 import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX } from "../constants/app-constants.js";
 import { getGuildUserById } from "./discord-api.js";
 import { buildAvatarUrl } from "../utils/discord-tools.js";
+import { getXRandomItemsFromArray } from "../utils/array.js";
 
 // KEYV_LOTTERIES_PREFIX + "_" + GUILD_ID + "_" + USER_ID
 // [
@@ -47,10 +48,9 @@ async function buildEmbedsLottery(lottery) {
 
     const createdFields = await Promise.all(lottery.players.map(async (playerId) => {
         const playerGuilds = await getGuildUserById(playerId);
-        // buildAvatarUrl(playerGuilds.user.id, playerGuilds.user.avatar)
         return {
-            name: `${playerGuilds.nick ?? playerGuilds.user.username}`,
-            value: `${playerGuilds.user.username}#${playerGuilds.user.discriminator}`,
+            name: `• ${playerGuilds.nick ?? playerGuilds.user.username} (${playerGuilds.user.username}#${playerGuilds.user.discriminator})`,
+            value: '',
         };
     }));
 
@@ -59,11 +59,54 @@ async function buildEmbedsLottery(lottery) {
         title: "List of players",
         // url: 'https://discord.js.org',
         author: {
-            name: `${owner.nick} (${owner.user.username}#${owner.user.discriminator})`,
+            name: `${owner.nick ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
             icon_url: buildAvatarUrl(owner.user.id, owner.user.avatar),
             // url: 'https://discord.js.org',
         },
-        // description: 'Some description there here',
+        description: `:coin: ${lottery.price}`,
+        thumbnail: {
+            url: 'https://i.imgur.com/aVq1dRh.png',
+        },
+        fields: createdFields,
+        // image: {
+        //     url: 'https://i.imgur.com/aVq1dRh.png',
+        // },
+        // timestamp: new Date().toISOString(),
+        // footer: {
+        //     text: 'Some footer text here',
+        //     icon_url: 'https://i.imgur.com/aVq1dRh.png',
+        // }
+    };
+}
+
+async function buildEmbedsWinnersLottery(lottery, podium, amountTax) {
+    const owner = await getGuildUserById(lottery.owner);
+
+    const createdFields = await Promise.all(podium.map(async (player, index) => {
+        const playerGuilds = await getGuildUserById(player.id);
+        return {
+            name: `• ${playerGuilds.nick ?? playerGuilds.user.username} (${playerGuilds.user.username}#${playerGuilds.user.discriminator})`,
+            value: `#${index + 1} :coin: ${player.amount}`,
+        };
+    }));
+
+    if (amountTax) {
+        createdFields.push({
+            name: "Tax",
+            value: `:coin: ${amountTax}`
+        });
+    }
+
+    return {
+        color: EMBEDS_COLOR,
+        title: "List of winners",
+        // url: 'https://discord.js.org',
+        author: {
+            name: `${owner.nick ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
+            icon_url: buildAvatarUrl(owner.user.id, owner.user.avatar),
+            // url: 'https://discord.js.org',
+        },
+        description: `:coin: ${lottery.price}`,
         thumbnail: {
             url: 'https://i.imgur.com/aVq1dRh.png',
         },
@@ -396,7 +439,7 @@ export async function disallowPlayerLottery(guildId, userId, userToDisallow) {
     }
 }
 
-export async function closeLottery(guildId, userId) {
+export async function closeLottery(guildId, userId, podiumSize, taxPercent) {
     const res = { ok: true, data: null, message: "" };
     let current;
 
@@ -424,13 +467,33 @@ export async function closeLottery(guildId, userId) {
 
         activeLottery.active = false;
 
-        // TO DO : Manage winners here
+        // Could do some validation but.. :)
+        // Make sure the total of each array equal to 1
+        const WINNING_DISTRIBUTION = [
+            [1],
+            [0.6, 0.4],
+            [0.5, 0.3, 0.2]
+        ];
+        const realPodiumSize = Math.min(activeLottery.players.length, podiumSize);
+        const totalAmount = activeLottery.price * activeLottery.players.length;
+        const amountTax = totalAmount * taxPercent / 100;
+        const amountWinners = totalAmount - amountTax;
+        const winners = getXRandomItemsFromArray(activeLottery.players, realPodiumSize);
+        let buildMessage = "Congratulations to";
+        const podium = winners.map((player, index, array) => {
+            buildMessage += ` #${index + 1} <@${player}>`;
+            return {
+                id: player,
+                amount: amountWinners * WINNING_DISTRIBUTION[array.length - 1][index]
+            };
+        });
 
         const newLotteries = updateLotteries(current, activeLottery);
 
         try {
             res.ok = await setLotteries(guildId, userId, newLotteries);
-            res.data = activeLottery;
+            res.data = await buildEmbedsWinnersLottery(activeLottery, podium, amountTax);
+            res.message = buildMessage;
         } catch (e) {
             res.ok = false;
             res.message = "Could not set the Lotteries";

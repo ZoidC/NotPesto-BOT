@@ -84,11 +84,21 @@ const Lottery = {
         .addSubcommand(sc =>
             sc.setName('roll')
                 .setDescription('Close a lottery')
-            // <Player> (optional)
-            // .addUserOption(option =>
-            //     option.setName('user')
-            //         .setDescription('Set the user\'s lottery to close')
-            // )
+                // <PodiumSize>
+                .addIntegerOption(option =>
+                    option.setName('podium-size')
+                        .setDescription('Set the amount of place on the podium')
+                        .setMinValue(1)
+                        .setMaxValue(3)
+                        .setRequired(true)
+                )
+                // <Tax> (optional)
+                .addIntegerOption(option =>
+                    option.setName('tax')
+                        .setDescription('Set the tax in %')
+                        .setMinValue(0)
+                        .setMaxValue(100)
+                )
         ),
     async execute(interaction) {
         const sc = interaction.options.getSubcommand();
@@ -144,9 +154,14 @@ const Lottery = {
                 await interaction.reply(res.ok ? { embeds: [res.data] } : res.message);
                 break;
             case "roll":
-                res = await closeLottery(guildId, userId);
+                option = interaction.options.getInteger('podium-size');
+                option2 = interaction.options.getInteger('tax');
+                res = await closeLottery(guildId, userId, option, option2);
                 if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? "WIP : Pesto won ?!" : res.message);
+                await interaction.reply(res.ok ? {
+                    content: res.message,
+                    embeds: [res.data]
+                } : res.message);
                 break;
             default:
                 await interaction.reply('Lottery what ?!');
