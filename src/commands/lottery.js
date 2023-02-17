@@ -9,10 +9,18 @@ const Lottery = {
         .addSubcommand(sc =>
             sc.setName('create')
                 .setDescription('Create my new lottery')
+                // <Price>
                 .addIntegerOption(option =>
-                    // <Price>
                     option.setName('price')
                         .setDescription('Set the inscription price')
+                        .setRequired(true)
+                )
+                // <Duration>
+                .addIntegerOption(option =>
+                    option.setName('duration')
+                        .setDescription('Duration in days (1 to 30)')
+                        .setMinValue(1)
+                        .setMaxValue(30)
                         .setRequired(true)
                 )
         )
@@ -87,7 +95,7 @@ const Lottery = {
                 // <PodiumSize>
                 .addIntegerOption(option =>
                     option.setName('podium-size')
-                        .setDescription('Set the amount of place on the podium')
+                        .setDescription('Set the amount of place on the podium (1 to 3)')
                         .setMinValue(1)
                         .setMaxValue(3)
                         .setRequired(true)
@@ -95,7 +103,7 @@ const Lottery = {
                 // <Tax> (optional)
                 .addIntegerOption(option =>
                     option.setName('tax')
-                        .setDescription('Set the tax in %')
+                        .setDescription('Set the tax in % (0 to 100)')
                         .setMinValue(0)
                         .setMaxValue(100)
                 )
@@ -111,7 +119,8 @@ const Lottery = {
         switch (sc) {
             case "create":
                 option = interaction.options.getInteger('price');
-                res = await createLottery(guildId, userId, option);
+                option2 = interaction.options.getInteger('duration');
+                res = await createLottery(guildId, userId, option, option2);
                 if (!res.ok) console.log(res);
                 await interaction.reply(res.ok ? "Lottery has been created" : res.message);
                 break;

@@ -10,6 +10,7 @@ import { getXRandomItemsFromArray } from "../utils/array.js";
 //         active: true,
 //         createDate: "",
 //         updateDate: "",
+//         endDate: "",
 //         guild: 0,
 //         owner: 0,
 //         allowedUsers: [],
@@ -20,7 +21,7 @@ import { getXRandomItemsFromArray } from "../utils/array.js";
 
 async function getLotteries(guildId, userId) {
     const lotteries = `${KEYV_LOTTERIES_PREFIX}_${guildId}_${userId}`;
-    return await keyv.get(lotteries);;
+    return await keyv.get(lotteries);
 }
 
 function hasActiveLottery(lotteries) {
@@ -127,7 +128,7 @@ async function buildEmbedsWinnersLottery(lottery, podium, amountTax) {
 //     return await keyv.clear(lotteries);
 // }
 
-export async function createLottery(guildId, userId, price) {
+export async function createLottery(guildId, userId, price, duration) {
     const res = { ok: true, data: null, message: "" };
     let current;
 
@@ -145,6 +146,7 @@ export async function createLottery(guildId, userId, price) {
         active: true,
         createDate: newDate,
         updateDate: newDate,
+        endDate: new Date(newDate.getTime() + (duration * 24 * 60 * 60 * 1000)),
         guild: guildId,
         owner: userId,
         allowedUsers: [],
@@ -161,8 +163,6 @@ export async function createLottery(guildId, userId, price) {
             res.ok = false;
             res.message = "Could not set the Lotteries";
         }
-
-        return res;
     } else {
         if (hasActiveLottery(current)) {
             res.ok = false;
@@ -180,9 +180,9 @@ export async function createLottery(guildId, userId, price) {
             res.ok = false;
             res.message = "Could not set the Lotteries";
         }
-
-        return res;
     }
+
+    return res;
 }
 
 export async function addPlayerLottery(guildId, userId, userToAdd, lotteryOwner) {
@@ -240,9 +240,9 @@ export async function addPlayerLottery(guildId, userId, userToAdd, lotteryOwner)
             res.ok = false;
             res.message = `Could not set ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lotteries`;
         }
-
-        return res;
     }
+
+    return res;
 }
 
 export async function removePlayerLottery(guildId, userId, userToRemove, lotteryOwner) {
@@ -300,9 +300,9 @@ export async function removePlayerLottery(guildId, userId, userToRemove, lottery
             res.ok = false;
             res.message = `Could not set ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "the"} Lotteries`;
         }
-
-        return res;
     }
+
+    return res;
 }
 
 export async function showLottery(guildId, userId, userToTarget) {
@@ -383,9 +383,9 @@ export async function allowPlayerLottery(guildId, userId, userToAllow) {
             res.ok = false;
             res.message = `Could not set the Lotteries`;
         }
-
-        return res;
     }
+
+    return res;
 }
 
 export async function disallowPlayerLottery(guildId, userId, userToDisallow) {
@@ -434,9 +434,9 @@ export async function disallowPlayerLottery(guildId, userId, userToDisallow) {
             res.ok = false;
             res.message = `Could not set the Lotteries`;
         }
-
-        return res;
     }
+
+    return res;
 }
 
 export async function closeLottery(guildId, userId, podiumSize, taxPercent) {
