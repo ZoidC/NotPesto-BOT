@@ -2,11 +2,11 @@ import 'dotenv/config';
 import { keyv } from './src/db/keyv-db.js';
 import { Client, Events, GatewayIntentBits } from 'discord.js';
 import { compareLocalAndServerCommands, loadLocalCommands } from './src/commands/manage/manage-commands.js';
-import { APP_ID, DISCORD_TOKEN, GUILD_ID, MONGODB_URI } from './src/constants/env-constants.js';
+import { APP_ID, DISCORD_API, DISCORD_TOKEN, GUILD_ID, MONGODB_URI } from './src/constants/env-constants.js';
 import { squareIt } from './src/utils/console.js';
 
 // Check .env values
-if (!APP_ID || !DISCORD_TOKEN || !GUILD_ID || !MONGODB_URI) {
+if (!APP_ID || !DISCORD_API || !DISCORD_TOKEN || !GUILD_ID || !MONGODB_URI) {
     squareIt("Please configure the .env");
     process.exit();
 }

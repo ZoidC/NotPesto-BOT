@@ -1,6 +1,9 @@
 # Not Pesto
 - DiscordJS Doc : https://discordjs.guide/
-- Discord Doc/Api : https://discord.com/developers/docs
+- Discord Doc/Api : https://discord.com/developers/doc
+
+## Require
+- Node v18.14.1 or higher
 
 ## How to add the BOT to a Discord
 - Generate an url with specific permission here : https://discord.com/developers/applications (OAuth2 / URL Generator)

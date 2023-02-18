@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { APP_ID, DISCORD_API, DISCORD_TOKEN, GUILD_ID } from '../constants/env-constants.js';
 
 const BASE_URL = DISCORD_API;
