@@ -73,7 +73,7 @@ async function updateActiveLottery(guildId, userId, updatedLottery) {
     return true;
 }
 
-export async function createLottery(guildId, userId, price, duration) {
+export async function createLottery(client, guildId, userId, price, duration) {
     const newDate = new Date();
     const newLottery = {
         active: true,
@@ -87,7 +87,7 @@ export async function createLottery(guildId, userId, price, duration) {
         price: price
     };
     const res = {
-        data: await buildEmbedsLottery(newLottery),
+        data: await buildEmbedsLottery(client, newLottery),
         message: "Lottery has been created"
     };
     let lotteries;
@@ -110,7 +110,7 @@ export async function createLottery(guildId, userId, price, duration) {
     return res;
 }
 
-export async function addPlayerLottery(guildId, userId, userToAdd, lotteryOwner) {
+export async function addPlayerLottery(client, guildId, userId, userToAdd, lotteryOwner) {
     const res = {
         data: null,
         message: `<@${userToAdd.id}> has been added to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "your"} Lottery`
@@ -126,12 +126,12 @@ export async function addPlayerLottery(guildId, userId, userToAdd, lotteryOwner)
     }
 
     activeLottery.players.push(userToAdd.id);
-    res.data = await buildEmbedsLottery(activeLottery);
+    res.data = await buildEmbedsLottery(client, activeLottery);
     await updateActiveLottery(guildId, lotteryOwner ? lotteryOwner.id : userId, activeLottery);
     return res;
 }
 
-export async function removePlayerLottery(guildId, userId, userToRemove, lotteryOwner) {
+export async function removePlayerLottery(client, guildId, userId, userToRemove, lotteryOwner) {
     const res = {
         data: null,
         message: `<@${userToRemove.id}> has been removed from ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "your"} Lottery`
@@ -147,15 +147,15 @@ export async function removePlayerLottery(guildId, userId, userToRemove, lottery
     }
 
     activeLottery.players = activeLottery.players.filter((e) => e !== userToRemove.id);
-    res.data = await buildEmbedsLottery(activeLottery);
+    res.data = await buildEmbedsLottery(client, activeLottery);
     await updateActiveLottery(guildId, lotteryOwner ? lotteryOwner.id : userId, activeLottery);
     return res;
 }
 
-export async function showLottery(guildId, userId, lotteryOwner) {
+export async function showLottery(client, guildId, userId, lotteryOwner) {
     const res = { data: null, message: "" };
     const activeLottery = await getActiveLottery(guildId, lotteryOwner ? lotteryOwner.id : userId);
-    res.data = await buildEmbedsLottery(activeLottery);
+    res.data = await buildEmbedsLottery(client, activeLottery);
     return res;
 }
 
@@ -203,13 +203,13 @@ export async function disallowPlayerLottery(guildId, userId, userToDisallow) {
     return res;
 }
 
-export async function closeLottery(guildId, userId, podiumSize, taxPercent) {
+export async function closeLottery(client, guildId, userId, podiumSize, taxPercent) {
     const res = { data: null, message: "" };
     const activeLottery = await getActiveLottery(guildId, userId);
     const { podium, amountTax, message } = handleWinnersLottery(activeLottery, podiumSize, taxPercent);
 
     activeLottery.active = false;
-    res.data = await buildEmbedsWinnersLottery(activeLottery, podium, amountTax);
+    res.data = await buildEmbedsWinnersLottery(client, activeLottery, podium, amountTax);
     res.message = message;
     await updateActiveLottery(guildId, userId, activeLottery);
     return res;

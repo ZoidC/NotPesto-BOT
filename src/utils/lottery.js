@@ -69,10 +69,10 @@ export function handleWinnersLottery(lottery, podiumSize, taxPercent) {
 }
 
 // Embeds
-export async function buildEmbedsLottery(lottery) {
-    const owner = await getGuildUserById(lottery.owner);
+export async function buildEmbedsLottery(client, lottery) {
+    const owner = await getGuildUserById(client, lottery.owner);
     const createdFields = await Promise.all(lottery.players.map(async (playerId) => {
-        const playerGuilds = await getGuildUserById(playerId);
+        const playerGuilds = await getGuildUserById(client, playerId);
         return {
             name: `• ${playerGuilds.nick ?? playerGuilds.user.username} (${playerGuilds.user.username}#${playerGuilds.user.discriminator})`,
             value: '',
@@ -104,10 +104,11 @@ export async function buildEmbedsLottery(lottery) {
     };
 }
 
-export async function buildEmbedsWinnersLottery(lottery, podium, amountTax) {
-    const owner = await getGuildUserById(lottery.owner);
+export async function buildEmbedsWinnersLottery(client, lottery, podium, amountTax) {
+
+    const owner = await getGuildUserById(client, lottery.owner);
     const createdFields = await Promise.all(podium.map(async (player, index) => {
-        const playerGuilds = await getGuildUserById(player.id);
+        const playerGuilds = await getGuildUserById(client, player.id);
         return {
             name: `• ${playerGuilds.nick ?? playerGuilds.user.username} (${playerGuilds.user.username}#${playerGuilds.user.discriminator})`,
             value: `#${index + 1} :coin: ${player.amount}`,

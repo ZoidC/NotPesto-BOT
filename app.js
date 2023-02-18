@@ -15,7 +15,7 @@ if (!APP_ID || !DISCORD_API || !DISCORD_TOKEN || !GUILD_ID || !MONGODB_URI) {
 keyv.on('error', err => console.error('Keyv connection error:', err));
 
 // Client Discord
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
 
 client.commands = await loadLocalCommands();
 

@@ -130,7 +130,7 @@ const Lottery = {
                 option = interaction.options.getInteger('price');
                 option2 = interaction.options.getInteger('duration');
                 answer = await doAndAnswer(
-                    async () => await createLottery(guildId, userId, option, option2),
+                    async () => await createLottery(client, guildId, userId, option, option2),
                     `Could not create your Lottery`
                 );
                 break;
@@ -138,7 +138,7 @@ const Lottery = {
                 option = interaction.options.getUser('user');
                 option2 = interaction.options.getUser('lottery-owner');
                 answer = await doAndAnswer(
-                    async () => await addPlayerLottery(guildId, userId, option, option2),
+                    async () => await addPlayerLottery(client, guildId, userId, option, option2),
                     `Could not add <@${option.id}> to ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
                 );
                 break;
@@ -146,7 +146,7 @@ const Lottery = {
                 option = interaction.options.getUser('user');
                 option2 = interaction.options.getUser('lottery-owner');
                 answer = await doAndAnswer(
-                    async () => await removePlayerLottery(guildId, userId, option, option2),
+                    async () => await removePlayerLottery(client, guildId, userId, option, option2),
                     `Could not remove <@${option.id}> from ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
                 );
                 break;
@@ -167,7 +167,7 @@ const Lottery = {
             case "show":
                 option = interaction.options.getUser('user');
                 answer = await doAndAnswer(
-                    async () => await showLottery(guildId, userId, option),
+                    async () => await showLottery(client, guildId, userId, option),
                     `Could not show ${option ? `<@${option.id}>'s` : "your"} Lottery`
                 );
                 break;
@@ -175,7 +175,7 @@ const Lottery = {
                 option = interaction.options.getInteger('podium-size');
                 option2 = interaction.options.getInteger('tax');
                 answer = await doAndAnswer(
-                    async () => await closeLottery(guildId, userId, option, option2),
+                    async () => await closeLottery(client, guildId, userId, option, option2),
                     `Could not roll your Lottery`
                 );
                 break;
