@@ -6,7 +6,8 @@
     "type": "module",
     "scripts": {
         "start": "node app.js",
-        "dev": "nodemon app.js"
+        "dev": "nodemon app.js",
+        "lint": "eslint --fix ."
     },
     "author": "ZoidC",
     "license": "MIT",
@@ -17,6 +18,7 @@
         "keyv": "^4.5.2"
     },
     "devDependencies": {
+        "eslint": "^8.34.0",
         "nodemon": "^2.0.20"
     }
 }

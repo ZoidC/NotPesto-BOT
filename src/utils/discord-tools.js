@@ -48,7 +48,7 @@ export function createExampleEmbed() {
             icon_url: 'https://i.imgur.com/AfFp7pu.png',
         },
     };
-};
+}
 
 export function buildAvatarUrl(userId, avatarId) {
     return `https://cdn.discordapp.com/avatars/${userId}/${avatarId}.jpeg`;

@@ -1,7 +1,6 @@
-import { APP_ID, DISCORD_API, DISCORD_TOKEN, GUILD_ID } from '../constants/env-constants.js';
+import { APP_ID, DISCORD_API, GUILD_ID } from '../constants/env-constants.js';
 import { DiscordRequest } from './fetch.js';
 
-const BASE_URL = DISCORD_API;
 const GUILD_ENDPOINT = `/applications/${APP_ID}/guilds/${GUILD_ID}/commands`;
 
 export async function getGuildSlashCommands() {

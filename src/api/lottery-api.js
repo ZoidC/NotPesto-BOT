@@ -73,18 +73,6 @@ async function updateActiveLottery(guildId, userId, updatedLottery) {
     return true;
 }
 
-async function clearLotteries(guildId, userId) {
-    const lotteriesName = createLotteriesName(guildId, userId);
-
-    try {
-        await keyv.clear(lotteriesName);
-    } catch (e) {
-        throw new Error("could not clear the Lotteries");
-    }
-
-    return true;
-}
-
 export async function createLottery(guildId, userId, price, duration) {
     const newDate = new Date();
     const newLottery = {
