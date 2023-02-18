@@ -5,8 +5,8 @@
     "main": "app.js",
     "type": "module",
     "scripts": {
-        "start": "node app.js",
-        "dev": "nodemon app.js",
+        "start": "node-ts app.ts",
+        "dev": "nodemon --esm app.ts",
         "lint": "eslint --fix ."
     },
     "author": "ZoidC",
@@ -18,7 +18,10 @@
         "keyv": "^4.5.2"
     },
     "devDependencies": {
+        "@types/node": "^18.14.0",
         "eslint": "^8.34.0",
-        "nodemon": "^2.0.20"
+        "nodemon": "^2.0.20",
+        "ts-node": "^10.9.1",
+        "typescript": "^4.9.5"
     }
 }

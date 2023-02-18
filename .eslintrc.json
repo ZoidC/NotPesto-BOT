@@ -6,7 +6,10 @@
     },
     "parserOptions": {
         "ecmaVersion": 2022,
-        "sourceType": "module"
+        "sourceType": "module",
+        "max-len": 160
     },
-    "rules": {}
+    "rules": {
+
+    }
 }
