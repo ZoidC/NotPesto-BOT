@@ -117,7 +117,7 @@ const Lottery = {
                         .setMaxValue(100)
                 )
         ),
-    async execute(interaction) {
+    async execute(client, interaction) {
         const sc = interaction.options.getSubcommand();
         const guildId = interaction.guildId;
         const userId = interaction.user.id;

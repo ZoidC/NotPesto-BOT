@@ -4,7 +4,7 @@ const Cgn = {
     data: new SlashCommandBuilder()
         .setName('cgn')
         .setDescription('Best player UK'),
-    async execute(interaction) {
+    async execute(client, interaction) {
         await interaction.reply(`Yea <@114458356491485185> drinks a lot of BO'OH'O'WA'ER'`);
     }
 };
