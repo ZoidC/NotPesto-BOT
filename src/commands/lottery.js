@@ -1,5 +1,14 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { addPlayerLottery, allowPlayerLottery, closeLottery, createLottery, disallowPlayerLottery, removePlayerLottery, showLottery } from '../api/lottery-api.js';
+import {
+    addPlayerLottery,
+    allowPlayerLottery,
+    closeLottery,
+    createLottery,
+    disallowPlayerLottery,
+    removePlayerLottery,
+    showLottery
+} from '../api/lottery-api.js';
+import { doAndAnswer } from '../utils/lottery.js';
 
 const Lottery = {
     data: new SlashCommandBuilder()
@@ -114,67 +123,67 @@ const Lottery = {
         const userId = interaction.user.id;
         let option;
         let option2;
-        let res;
+        let answer;
 
         switch (sc) {
             case "create":
                 option = interaction.options.getInteger('price');
                 option2 = interaction.options.getInteger('duration');
-                res = await createLottery(guildId, userId, option, option2);
-                if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? "Lottery has been created" : res.message);
+                answer = await doAndAnswer(
+                    async () => await createLottery(guildId, userId, option, option2),
+                    `Could not create your Lottery`
+                );
                 break;
             case "add":
                 option = interaction.options.getUser('user');
                 option2 = interaction.options.getUser('lottery-owner');
-                res = await addPlayerLottery(guildId, userId, option, option2);
-                if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? {
-                    content: `<@${option.id}> has been added to ${option2 ? `<@${option2.id}>'s` : "the"} Lottery`,
-                    embeds: [res.data]
-                } : res.message);
+                answer = await doAndAnswer(
+                    async () => await addPlayerLottery(guildId, userId, option, option2),
+                    `Could not add <@${option.id}> to ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
+                );
                 break;
             case "remove":
                 option = interaction.options.getUser('user');
                 option2 = interaction.options.getUser('lottery-owner');
-                res = await removePlayerLottery(guildId, userId, option, option2);
-                if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? {
-                    content: `<@${option.id}> has been removed from ${option2 ? `<@${option2.id}>'s` : "the"} Lottery`,
-                    embeds: [res.data]
-                } : res.message);
+                answer = await doAndAnswer(
+                    async () => await removePlayerLottery(guildId, userId, option, option2),
+                    `Could not remove <@${option.id}> from ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
+                );
                 break;
             case "allow":
                 option = interaction.options.getUser('user');
-                res = await allowPlayerLottery(guildId, userId, option);
-                if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? `<@${option.id}> has been allowed to update your Lottery` : res.message);
+                answer = await doAndAnswer(
+                    async () => allowPlayerLottery(guildId, userId, option),
+                    `<@${option.id}> could not be allowed to update your Lottery`
+                );
                 break;
             case "disallow":
                 option = interaction.options.getUser('user');
-                res = await disallowPlayerLottery(guildId, userId, option);
-                if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? `<@${option.id}> has been disallowed to update your Lottery` : res.message);
+                answer = await doAndAnswer(
+                    async () => disallowPlayerLottery(guildId, userId, option),
+                    `<@${option.id}> could not be disallowed to update your Lottery`
+                );
                 break;
             case "show":
                 option = interaction.options.getUser('user');
-                res = await showLottery(guildId, userId, option);
-                if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? { embeds: [res.data] } : res.message);
+                answer = await doAndAnswer(
+                    async () => await showLottery(guildId, userId, option),
+                    `Could not show ${option ? `<@${option.id}>'s` : "your"} Lottery`
+                );
                 break;
             case "roll":
                 option = interaction.options.getInteger('podium-size');
                 option2 = interaction.options.getInteger('tax');
-                res = await closeLottery(guildId, userId, option, option2);
-                if (!res.ok) console.log(res);
-                await interaction.reply(res.ok ? {
-                    content: res.message,
-                    embeds: [res.data]
-                } : res.message);
+                answer = await doAndAnswer(
+                    async () => await closeLottery(guildId, userId, option, option2),
+                    `Could not roll your Lottery`
+                );
                 break;
             default:
-                await interaction.reply('Lottery what ?!');
+                answer = { content: 'Lottery what ?!' };
         }
+
+        await interaction.reply(answer);
     }
 };
 
