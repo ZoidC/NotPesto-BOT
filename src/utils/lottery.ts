@@ -10,6 +10,7 @@ import { getGuildMemberById } from "../api/discord-api.js";
 import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX, DEFAULT_AVATAR_URL } from "../constants/app-constants.js";
 import { Lottery } from "../types/Lottery.js";
 import { getXRandomItemsFromArray } from "./array.js";
+import { getErrorMessage } from "./error.js";
 
 // Could do some validation but.. :)
 // Make sure the total of each array equal to 1
