@@ -1,10 +1,8 @@
 import {
-  APIEmbed,
-  APIEmbedField,
-  ChatInputCommandInteraction,
-  Guild,
-  GuildMember,
-  InteractionReplyOptions,
+  type APIEmbed,
+  type APIEmbedField,
+  type ChatInputCommandInteraction,
+  type InteractionReplyOptions,
 } from "discord.js";
 import { getGuildMemberById } from "../api/discord-api.js";
 import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX, DEFAULT_AVATAR_URL } from "../constants/app-constants.js";
@@ -19,7 +17,7 @@ import {
   TICKET,
   TROPHY,
 } from "../constants/discord-constants.js";
-import { Lottery, Winner } from "../types/Lottery.js";
+import { type Lottery, type Winner } from "../types/Lottery.js";
 import { getXRandomItemsFromArray } from "./array.js";
 import { buildAvatarUrl } from "./discord-tools.js";
 import { getErrorMessage } from "./error.js";
@@ -31,22 +29,26 @@ const WINNING_DISTRIBUTION = [[1], [0.6, 0.4], [0.5, 0.3, 0.2]];
 export function createLotteriesName(guildId: string, userId: string) {
   return `${KEYV_LOTTERIES_PREFIX}_${guildId}_${userId}`;
 }
-export function hasActiveLottery(lotteries: Array<Lottery>): Lottery | null {
-  let res = null;
+
+export function hasActiveLottery(lotteries: Lottery[]): Lottery | undefined {
+  let res;
   [...lotteries].forEach((lottery) => {
-    if (lottery.active) res = lottery;
+    if (lottery.active) {
+      res = lottery;
+    }
   });
   return res;
 }
 
-export function isAllowedToUpdate(lottery: Lottery, userId: string) {
+export function isAllowedToUpdate(lottery: Lottery, userId: string): boolean {
   return lottery.ownerId === userId || lottery.allowedUserIds.includes(userId);
 }
-export function isAllowedIn(lottery: Lottery, userId: string) {
+
+export function isAllowedIn(lottery: Lottery, userId: string): boolean {
   return lottery.allowedUserIds.includes(userId);
 }
 
-export function isPlayerIn(lottery: Lottery, playerId: string) {
+export function isPlayerIn(lottery: Lottery, playerId: string): boolean {
   return lottery.playerIds.includes(playerId);
 }
 
@@ -57,6 +59,7 @@ export function replaceActiveLottery(lotteries: Lottery[], newLottery: Lottery) 
       done = true;
       return newLottery;
     }
+
     return lottery;
   });
 
@@ -73,7 +76,7 @@ export function handleWinnersLottery(lottery: Lottery, podiumSize: number, taxPe
   const amountTax = (totalAmount * taxPercent) / 100;
   const amountWinners = totalAmount - amountTax;
   const winners = getXRandomItemsFromArray(lottery.playerIds, realPodiumSize);
-  let message = `${winners.length ? "Congratulations to" : ""}`;
+  let message = `${winners.length > 0 ? "Congratulations to" : ""}`;
   const podium = winners.map((player, index, array) => {
     message += ` ${pickMedalByIndex(index)} <@${player}>`;
     const winner: Winner = {
@@ -92,12 +95,18 @@ const EMBED_BACKSLASH_N: APIEmbedField = {
   value: "",
 };
 
-export async function buildEmbedLottery(interaction: ChatInputCommandInteraction, lottery: Lottery): Promise<APIEmbed> {
-  const guild = interaction?.guild as Guild;
-  const owner = await getGuildMemberById(guild, lottery.ownerId);
-  if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
+export async function buildEmbedLottery(
+  interaction: ChatInputCommandInteraction<"cached">,
+  lottery: Lottery,
+): Promise<APIEmbed> {
+  const guild = interaction.guild;
 
-  const description: string = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
+  const owner = await getGuildMemberById(guild, lottery.ownerId);
+  if (!owner) {
+    throw Error(`Player ${lottery.ownerId} not found to build lottery`);
+  }
+
+  const description = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
 
   const currentPot: APIEmbedField = {
     name: `${MONEYBAG} Current pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
@@ -105,7 +114,7 @@ export async function buildEmbedLottery(interaction: ChatInputCommandInteraction
   };
 
   const playerPool: APIEmbedField = {
-    name: `${lottery.playerIds.length ? "Players" : ""}`,
+    name: `${lottery.playerIds.length > 0 ? "Players" : ""}`,
     value: lottery.playerIds.reduce((acc, playerId) => (acc += `<@!${playerId}>\n`), ""),
   };
 
@@ -113,7 +122,7 @@ export async function buildEmbedLottery(interaction: ChatInputCommandInteraction
   fields.push(EMBED_BACKSLASH_N);
   fields.push(currentPot);
   fields.push(EMBED_BACKSLASH_N);
-  if (lottery.playerIds.length) {
+  if (lottery.playerIds.length > 0) {
     fields.push(playerPool);
     fields.push(EMBED_BACKSLASH_N);
   }
@@ -121,7 +130,7 @@ export async function buildEmbedLottery(interaction: ChatInputCommandInteraction
   return {
     color: EMBEDS_COLOR,
     title: "Lottery",
-    // url: 'https://discord.js.org',
+    // Url: 'https://discord.js.org',
     author: {
       name: `${owner.nickname ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
       icon_url: owner.user.avatar ? buildAvatarUrl(owner.id, owner.user.avatar) : DEFAULT_AVATAR_URL,
@@ -131,7 +140,7 @@ export async function buildEmbedLottery(interaction: ChatInputCommandInteraction
       url: "https://i.imgur.com/aVq1dRh.png",
     },
     fields,
-    // image: {
+    // Image: {
     //     url: 'https://i.imgur.com/aVq1dRh.png',
     // },
     timestamp: new Date(lottery.endDate).toISOString(),
@@ -143,16 +152,19 @@ export async function buildEmbedLottery(interaction: ChatInputCommandInteraction
 }
 
 export async function buildEmbedWinnersLottery(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
   lottery: Lottery,
   podium: Winner[],
-  amountTax: number
+  amountTax: number,
 ): Promise<APIEmbed> {
-  const guild = interaction?.guild as Guild;
-  const owner = await getGuildMemberById(guild, lottery.ownerId);
-  if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
+  const guild = interaction.guild;
 
-  const description: string = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
+  const owner = await getGuildMemberById(guild, lottery.ownerId);
+  if (!owner) {
+    throw Error(`Player ${lottery.ownerId} not found to build lottery`);
+  }
+
+  const description = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
 
   const currentPot: APIEmbedField = {
     name: `${MONEYBAG} Pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
@@ -160,10 +172,11 @@ export async function buildEmbedWinnersLottery(
   };
 
   const winningPlayerPool: APIEmbedField = {
-    name: `${podium.length ? `${TROPHY} Winners ${TROPHY}` : ""}`,
-    value: podium.reduce((acc, winner, index) => {
-      return (acc += `${pickMedalByIndex(index)} <@!${winner.playerId}> ${COIN} ${winner.amount}\n`);
-    }, ""),
+    name: `${podium.length > 0 ? `${TROPHY} Winners ${TROPHY}` : ""}`,
+    value: podium.reduce(
+      (acc, winner, index) => (acc += `${pickMedalByIndex(index)} <@!${winner.playerId}> ${COIN} ${winner.amount}\n`),
+      "",
+    ),
   };
 
   const guildTax: APIEmbedField = {
@@ -174,10 +187,11 @@ export async function buildEmbedWinnersLottery(
   const fields: APIEmbedField[] = [];
   fields.push(EMBED_BACKSLASH_N);
   fields.push(currentPot);
-  if (podium.length) {
+  if (podium.length > 0) {
     fields.push(EMBED_BACKSLASH_N);
     fields.push(winningPlayerPool);
   }
+
   if (amountTax) {
     fields.push(EMBED_BACKSLASH_N);
     fields.push(guildTax);
@@ -186,7 +200,7 @@ export async function buildEmbedWinnersLottery(
   return {
     color: EMBEDS_COLOR,
     title: "Lottery",
-    // url: 'https://discord.js.org',
+    // Url: 'https://discord.js.org',
     author: {
       name: `${owner.nickname ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
       icon_url: owner.user.avatar ? buildAvatarUrl(owner.id, owner.user.avatar) : DEFAULT_AVATAR_URL,
@@ -196,7 +210,7 @@ export async function buildEmbedWinnersLottery(
       url: "https://i.imgur.com/aVq1dRh.png",
     },
     fields,
-    // image: {
+    // Image: {
     //     url: 'https://i.imgur.com/aVq1dRh.png',
     // },
     // timestamp: new Date(lottery.endDate).toISOString(),

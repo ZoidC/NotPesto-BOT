@@ -12,7 +12,9 @@ if (!APP_ID || !DISCORD_API || !DISCORD_TOKEN || !GUILD_ID || !MONGODB_URI) {
 }
 
 // Database
-keyv.on("error", (err) => console.error("Keyv connection error:", err));
+keyv.on("error", (err) => {
+  console.error("Keyv connection error:", err);
+});
 
 // Client Discord
 const client = new Client({
@@ -40,7 +42,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const command = localSlashCommands.get(interaction.commandName);
 
-  if (!command) {
+  if (command == null) {
     console.error(`Command <${interaction.commandName}> was not found.`);
     return;
   }
@@ -50,6 +52,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
   } catch (e) {
     console.error(e);
     // ephemeral: true means only the user who did the command sees the reply
-    await interaction.reply({ content: "Bip? Boup! .. **BONK** .. *dead*", ephemeral: true });
+    await interaction.reply({
+      content: "Bip? Boup! .. **BONK** .. *dead*",
+      ephemeral: true,
+    });
   }
 });

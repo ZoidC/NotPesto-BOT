@@ -2,14 +2,16 @@ import * as fs from "fs";
 
 const DUMP_FOLDER_NAME = "dump";
 
-// @ts-ignore
 export async function writeDump(fileName: string, data: any) {
   const filePath = `${DUMP_FOLDER_NAME}/${fileName}.json`;
 
   manageDumpFolder();
 
   fs.writeFile(filePath, JSON.stringify(data), (err) => {
-    if (err) throw err;
+    if (err != null) {
+      throw err;
+    }
+
     console.log(`File successfully written : ${filePath}`);
   });
 }

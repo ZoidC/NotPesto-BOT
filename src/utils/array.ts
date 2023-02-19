@@ -1,4 +1,4 @@
-export function getXRandomItemsFromArray<T>(array: Array<T>, nbItems: number) {
+export function getXRandomItemsFromArray<T>(array: T[], nbItems: number) {
   const workingArray = [...array];
   const maxItem = Math.min(workingArray.length, nbItems);
   const randomItems = [];

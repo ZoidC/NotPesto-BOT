@@ -1,16 +1,16 @@
-export interface Lottery {
+export type Lottery = {
   active: boolean;
   createDate: number;
   updateDate: number;
   endDate: number;
   guildId: string;
   ownerId: string;
-  allowedUserIds: Array<string>;
-  playerIds: Array<string>;
+  allowedUserIds: string[];
+  playerIds: string[];
   price: number;
-}
+};
 
-export interface Winner {
+export type Winner = {
   playerId: string;
   amount: number;
-}
+};

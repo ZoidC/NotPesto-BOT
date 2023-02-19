@@ -1,8 +1,7 @@
 import {
-  ChatInputCommandInteraction,
-  Client,
-  GuildMember,
-  InteractionReplyOptions,
+  type ChatInputCommandInteraction,
+  type GuildMember,
+  type InteractionReplyOptions,
   SlashCommandBuilder,
 } from "discord.js";
 import {
@@ -27,7 +26,7 @@ const Lottery = {
         .setDescription("Create my new lottery")
         // <Price>
         .addIntegerOption((option) =>
-          option.setName("ticket-price").setDescription("Set the ticket price").setRequired(true)
+          option.setName("ticket-price").setDescription("Set the ticket price").setRequired(true),
         )
         // <Duration>
         .addIntegerOption((option) =>
@@ -36,8 +35,8 @@ const Lottery = {
             .setDescription("Duration in days (1 to 30)")
             .setMinValue(1)
             .setMaxValue(30)
-            .setRequired(true)
-        )
+            .setRequired(true),
+        ),
     )
     // Add
     .addSubcommand((sc) =>
@@ -48,8 +47,8 @@ const Lottery = {
         .addUserOption((option) => option.setName("user").setDescription("Set the user to add").setRequired(true))
         // <Player> (optional)
         .addUserOption((option) =>
-          option.setName("lottery-owner").setDescription("Set the targeted lottery via the owner")
-        )
+          option.setName("lottery-owner").setDescription("Set the targeted lottery via the owner"),
+        ),
     )
     // Remove
     .addSubcommand((sc) =>
@@ -60,8 +59,8 @@ const Lottery = {
         .addUserOption((option) => option.setName("user").setDescription("Set the user to remove").setRequired(true))
         // <Player> (optional)
         .addUserOption((option) =>
-          option.setName("lottery-owner").setDescription("Set the targeted lottery via the owner")
-        )
+          option.setName("lottery-owner").setDescription("Set the targeted lottery via the owner"),
+        ),
     )
     // Allow
     .addSubcommand((sc) =>
@@ -69,7 +68,7 @@ const Lottery = {
         .setName("allow")
         .setDescription("Allow another user to update my lottery")
         // <Player>
-        .addUserOption((option) => option.setName("user").setDescription("Set the user to allow").setRequired(true))
+        .addUserOption((option) => option.setName("user").setDescription("Set the user to allow").setRequired(true)),
     )
     // Disallow
     .addSubcommand((sc) =>
@@ -77,7 +76,7 @@ const Lottery = {
         .setName("disallow")
         .setDescription("Disallow another user to update my lottery")
         // <Player>
-        .addUserOption((option) => option.setName("user").setDescription("Set the user to disallow").setRequired(true))
+        .addUserOption((option) => option.setName("user").setDescription("Set the user to disallow").setRequired(true)),
     )
     // Show
     .addSubcommand((sc) =>
@@ -85,7 +84,7 @@ const Lottery = {
         .setName("show")
         .setDescription("Show a lottery")
         // <Player> (optional)
-        .addUserOption((option) => option.setName("user").setDescription("Set the user to disallow"))
+        .addUserOption((option) => option.setName("user").setDescription("Set the user to disallow")),
     )
     // Roll
     .addSubcommand((sc) =>
@@ -99,14 +98,14 @@ const Lottery = {
             .setDescription("Set the amount of place on the podium (1 to 3)")
             .setMinValue(1)
             .setMaxValue(3)
-            .setRequired(true)
+            .setRequired(true),
         )
         // <Tax> (optional)
         .addIntegerOption((option) =>
-          option.setName("tax").setDescription("Set the tax in % (0 to 100)").setMinValue(0).setMaxValue(100)
-        )
+          option.setName("tax").setDescription("Set the tax in % (0 to 100)").setMinValue(0).setMaxValue(100),
+        ),
     ),
-  async execute(interaction: ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction<"cached">) {
     const subCommand = interaction.options.getSubcommand();
     const guildId = interaction.guildId;
     const userId = interaction.user.id;
@@ -122,7 +121,7 @@ const Lottery = {
 
           reply = await doAndReply(
             async () => await createLottery(interaction, guildId, userId, option, option2),
-            `Could not create your Lottery`
+            "Could not create your Lottery",
           );
         }
         break;
@@ -133,7 +132,7 @@ const Lottery = {
 
           reply = await doAndReply(
             async () => await addPlayerLottery(interaction, guildId, userId, option, option2),
-            `Could not add <@${option?.id}> to ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
+            `Could not add <@${option?.id}> to ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`,
           );
         }
         break;
@@ -144,7 +143,7 @@ const Lottery = {
 
           reply = await doAndReply(
             async () => await removePlayerLottery(interaction, guildId, userId, option, option2),
-            `Could not remove <@${option?.id}> from ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
+            `Could not remove <@${option?.id}> from ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`,
           );
         }
         break;
@@ -153,8 +152,8 @@ const Lottery = {
           const option: GuildMember = interaction.options.getMember("user") as GuildMember;
 
           reply = await doAndReply(
-            async () => allowPlayerLottery(guildId, userId, option),
-            `<@${option.id}> could not be allowed to update your Lottery`
+            async () => await allowPlayerLottery(guildId, userId, option),
+            `<@${option.id}> could not be allowed to update your Lottery`,
           );
         }
         break;
@@ -163,8 +162,8 @@ const Lottery = {
           const option: GuildMember = interaction.options.getMember("user") as GuildMember;
 
           reply = await doAndReply(
-            async () => disallowPlayerLottery(guildId, userId, option),
-            `<@${option.id}> could not be disallowed to update your Lottery`
+            async () => await disallowPlayerLottery(guildId, userId, option),
+            `<@${option.id}> could not be disallowed to update your Lottery`,
           );
         }
         break;
@@ -174,7 +173,7 @@ const Lottery = {
 
           reply = await doAndReply(
             async () => await showLottery(interaction, guildId, userId, option),
-            `Could not show ${option ? `<@${option.id}>'s` : "your"} Lottery`
+            `Could not show ${option ? `<@${option.id}>'s` : "your"} Lottery`,
           );
         }
         break;
@@ -185,7 +184,7 @@ const Lottery = {
 
           reply = await doAndReply(
             async () => await closeLottery(interaction, guildId, userId, option, option2),
-            `Could not roll your Lottery`
+            "Could not roll your Lottery",
           );
         }
         break;

@@ -5,10 +5,10 @@ import { COMMANDS_FOLDER } from "../../constants/app-constants.js";
 import { getGuildSlashCommands, postGuildSlashCommand } from "../../api/command-api.js";
 import { squareIt } from "../../utils/console.js";
 import { COMMAND_OVERRIDE } from "../../constants/env-constants.js";
-import { Command } from "../../types/Command.js";
+import { type Command } from "../../types/Command.js";
 
 export async function loadLocalSlashCommands(): Promise<Collection<string, Command>> {
-  const commands: Collection<string, Command> = new Collection();
+  const commands = new Collection<string, Command>();
   const commandsPath = path.join(process.cwd(), COMMANDS_FOLDER);
   const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".ts"));
 
@@ -29,7 +29,7 @@ export async function syncSlashCommands(localCommands: Collection<string, Comman
       const messages = await Promise.all(
         commandsArray.map(async (command) => {
           return await syncSlashCommand(command, serverSlashCommandNames);
-        })
+        }),
       );
       squareIt(messages);
     }

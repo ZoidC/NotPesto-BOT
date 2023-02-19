@@ -1,18 +1,23 @@
 {
+    "env": {
+        "es2021": true,
+        "node": true
+    },
     "extends": [
         "eslint:recommended",
-        "prettier"
+        "plugin:@typescript-eslint/recommended"
     ],
-    "env": {
-        "node": true,
-        "es6": true
-    },
+    "overrides": [],
+    "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": 2022,
+        "ecmaVersion": "latest",
         "sourceType": "module",
-        "max-len": 160
+        "project": "./tsconfig.json"
     },
+    "plugins": [
+        "@typescript-eslint"
+    ],
     "rules": {
-        "@typescript-eslint/no-explicit-any": ["warn"]
-    }
+    },
+    "root": true
 }

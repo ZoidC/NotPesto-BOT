@@ -1,6 +1,8 @@
-import { ChatInputCommandInteraction, GuildMember, InteractionReplyOptions } from "discord.js";
+import { type ChatInputCommandInteraction, type GuildMember, type InteractionReplyOptions } from "discord.js";
+
 import { keyv } from "../db/keyv-db.js";
-import { Lottery } from "../types/Lottery.js";
+import { type Lottery } from "../types/Lottery.js";
+
 import {
   buildEmbedLottery,
   buildEmbedWinnersLottery,
@@ -59,11 +61,11 @@ async function updateActiveLottery(guildId: string, userId: string, updatedLotte
 }
 
 export async function createLottery(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
   guildId: string,
   userId: string,
   price: number,
-  duration: number
+  duration: number,
 ): Promise<InteractionReplyOptions> {
   const newDate = new Date().getTime();
   const newLottery: Lottery = {
@@ -72,11 +74,11 @@ export async function createLottery(
     updateDate: newDate,
     // Maybe substract hours if needed
     endDate: newDate + duration * 24 * 60 * 60 * 1000,
-    guildId: guildId,
+    guildId,
     ownerId: userId,
     allowedUserIds: [],
     playerIds: [],
-    price: price,
+    price,
   };
   const res: InteractionReplyOptions = {
     embeds: [await buildEmbedLottery(interaction, newLottery)],
@@ -103,16 +105,15 @@ export async function createLottery(
 }
 
 export async function addPlayerLottery(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
   guildId: string,
   userId: string,
   userToAdd: GuildMember,
-  lotteryOwner: GuildMember
+  lotteryOwner: GuildMember,
 ): Promise<InteractionReplyOptions> {
   const res: InteractionReplyOptions = {
     content: `<@${userToAdd.id}> has been added to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "your"} Lottery`,
   };
-  const message = `<@${userToAdd.id}> has been added to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "your"} Lottery`;
   const activeLottery = await getActiveLottery(guildId, lotteryOwner ? lotteryOwner.id : userId);
 
   if (!isAllowedToUpdate(activeLottery, userId)) {
@@ -130,11 +131,11 @@ export async function addPlayerLottery(
 }
 
 export async function removePlayerLottery(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
   guildId: string,
   userId: string,
   userToRemove: GuildMember,
-  owner: GuildMember
+  owner: GuildMember,
 ): Promise<InteractionReplyOptions> {
   const res: InteractionReplyOptions = {
     content: `<@${userToRemove.id}> has been removed from ${owner ? `<@${owner.id}>'s` : "your"} Lottery`,
@@ -156,10 +157,10 @@ export async function removePlayerLottery(
 }
 
 export async function showLottery(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
   guildId: string,
   userId: string,
-  owner: GuildMember
+  owner: GuildMember,
 ): Promise<InteractionReplyOptions> {
   const res: InteractionReplyOptions = {
     content: "",
@@ -172,7 +173,7 @@ export async function showLottery(
 export async function allowPlayerLottery(
   guildId: string,
   userId: string,
-  userToAllow: GuildMember
+  userToAllow: GuildMember,
 ): Promise<InteractionReplyOptions> {
   const res: InteractionReplyOptions = {
     content: `<@${userToAllow.id}> has been allowed to udate your Lottery`,
@@ -197,7 +198,7 @@ export async function allowPlayerLottery(
 export async function disallowPlayerLottery(
   guildId: string,
   userId: string,
-  userToDisallow: GuildMember
+  userToDisallow: GuildMember,
 ): Promise<InteractionReplyOptions> {
   const res: InteractionReplyOptions = {
     content: `<@${userToDisallow.id}> has been disallowed to udate your Lottery`,
@@ -220,11 +221,11 @@ export async function disallowPlayerLottery(
 }
 
 export async function closeLottery(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
   guildId: string,
   userId: string,
   podiumSize: number,
-  taxPercent: number
+  taxPercent: number,
 ): Promise<InteractionReplyOptions> {
   const activeLottery = await getActiveLottery(guildId, userId);
   const { podium, amountTax, message } = handleWinnersLottery(activeLottery, podiumSize, taxPercent);
