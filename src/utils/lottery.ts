@@ -165,11 +165,11 @@ export async function buildEmbedWinnersLottery(
 }
 
 export async function doAndReply(action: () => Promise<InteractionReplyOptions>, baseErrorMessage: string) {
-  let answer: InteractionReplyOptions;
+  let reply: InteractionReplyOptions;
   try {
-    answer = await action();
-  } catch (e: any) {
-    answer = { content: `${baseErrorMessage}, ${e.message}` };
+    reply = await action();
+  } catch (e) {
+    reply = { content: `${baseErrorMessage}, ${getErrorMessage(e)}` };
   }
-  return answer;
+  return reply;
 }

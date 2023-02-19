@@ -46,8 +46,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
     await command.execute(client, interaction);
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
     // ephemeral: true means only the user who did the command sees the reply
     await interaction.reply({ content: "Bip? Boup! .. **BONK** .. *dead*", ephemeral: true });
   }
