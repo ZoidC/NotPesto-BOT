@@ -65,12 +65,13 @@ export async function createLottery(
   price: number,
   duration: number
 ): Promise<InteractionReplyOptions> {
-  const newDate = new Date();
+  const newDate = new Date().getTime();
   const newLottery: Lottery = {
     active: true,
     createDate: newDate,
     updateDate: newDate,
-    endDate: new Date(newDate.getTime() + duration * 24 * 60 * 60 * 1000),
+    // Maybe substract hours if needed
+    endDate: newDate + duration * 24 * 60 * 60 * 1000,
     guildId: guildId,
     ownerId: userId,
     allowedUserIds: [],

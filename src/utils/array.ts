@@ -1,10 +1,11 @@
 export function getXRandomItemsFromArray<T>(array: Array<T>, nbItems: number) {
-  const maxItem = Math.min(array.length, nbItems);
+  const workingArray = [...array];
+  const maxItem = Math.min(workingArray.length, nbItems);
   const randomItems = [];
 
   for (let i = 0; i < maxItem; i++) {
-    const randomIndex = Math.floor(Math.random() * array.length);
-    const extractedItem = array.splice(randomIndex, 1);
+    const randomIndex = Math.floor(Math.random() * workingArray.length);
+    const extractedItem = workingArray.splice(randomIndex, 1);
     randomItems.push(extractedItem[0]);
   }
 

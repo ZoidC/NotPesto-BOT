@@ -8,8 +8,20 @@ import {
 } from "discord.js";
 import { getGuildMemberById } from "../api/discord-api.js";
 import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX, DEFAULT_AVATAR_URL } from "../constants/app-constants.js";
-import { Lottery } from "../types/Lottery.js";
+import {
+  BANK,
+  COIN,
+  MEDAL,
+  MEDAL_FIRST,
+  MEDAL_SECOND,
+  MEDAL_THIRD,
+  MONEYBAG,
+  TICKET,
+  TROPHY,
+} from "../constants/discord-constants.js";
+import { Lottery, Winner } from "../types/Lottery.js";
 import { getXRandomItemsFromArray } from "./array.js";
+import { buildAvatarUrl } from "./discord-tools.js";
 import { getErrorMessage } from "./error.js";
 
 // Could do some validation but.. :)
@@ -63,106 +75,154 @@ export function handleWinnersLottery(lottery: Lottery, podiumSize: number, taxPe
   const winners = getXRandomItemsFromArray(lottery.playerIds, realPodiumSize);
   let message = `${winners.length ? "Congratulations to" : ""}`;
   const podium = winners.map((player, index, array) => {
-    message += ` #${index + 1} <@${player}>`;
-    return {
-      id: player,
+    message += ` ${pickMedalByIndex(index)} <@${player}>`;
+    const winner: Winner = {
+      playerId: player,
       amount: amountWinners * WINNING_DISTRIBUTION[array.length - 1][index],
     };
+    return winner;
   });
 
   return { podium, amountTax, message };
 }
 
 // Embeds
+const EMBED_BACKSLASH_N: APIEmbedField = {
+  name: "\u200B",
+  value: "",
+};
+
 export async function buildEmbedLottery(interaction: ChatInputCommandInteraction, lottery: Lottery): Promise<APIEmbed> {
   const guild = interaction?.guild as Guild;
-  const createdFields: APIEmbedField[] = await Promise.all(
-    lottery.playerIds.map(async (playerId: string) => {
-      const player = await getGuildMemberById(guild, playerId);
-      if (!player) throw Error(`Player ${playerId} not found to build lottery`);
-      return {
-        name: `• ${player.nickname ?? player.user.username} (${player.user.username}#${player.user.discriminator})`,
-        value: "",
-      };
-    })
-  );
-
   const owner = await getGuildMemberById(guild, lottery.ownerId);
   if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
+
+  const description: string = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
+
+  const currentPot: APIEmbedField = {
+    name: `${MONEYBAG} Current pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
+    value: "",
+  };
+
+  const playerPool: APIEmbedField = {
+    name: `${lottery.playerIds.length ? "Players" : ""}`,
+    value: lottery.playerIds.reduce((acc, playerId) => (acc += `<@!${playerId}>\n`), ""),
+  };
+
+  const fields: APIEmbedField[] = [];
+  fields.push(EMBED_BACKSLASH_N);
+  fields.push(currentPot);
+  fields.push(EMBED_BACKSLASH_N);
+  if (lottery.playerIds.length) {
+    fields.push(playerPool);
+    fields.push(EMBED_BACKSLASH_N);
+  }
+
   return {
     color: EMBEDS_COLOR,
-    title: "List of players",
+    title: "Lottery",
     // url: 'https://discord.js.org',
     author: {
       name: `${owner.nickname ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
-      icon_url: owner.avatarURL() || DEFAULT_AVATAR_URL,
+      icon_url: owner.user.avatar ? buildAvatarUrl(owner.id, owner.user.avatar) : DEFAULT_AVATAR_URL,
     },
-    description: `:coin: ${lottery.price}`,
+    description,
     thumbnail: {
       url: "https://i.imgur.com/aVq1dRh.png",
     },
-    fields: createdFields,
+    fields,
     // image: {
     //     url: 'https://i.imgur.com/aVq1dRh.png',
     // },
-    // timestamp: new Date().toISOString(),
-    // footer: {
-    //     text: 'Some footer text here',
-    //     icon_url: 'https://i.imgur.com/aVq1dRh.png',
-    // }
+    timestamp: new Date(lottery.endDate).toISOString(),
+    footer: {
+      text: "Closing date",
+      icon_url: "https://i.imgur.com/aVq1dRh.png",
+    },
   };
 }
 
 export async function buildEmbedWinnersLottery(
   interaction: ChatInputCommandInteraction,
   lottery: Lottery,
-  podium: { id: string; amount: number }[],
+  podium: Winner[],
   amountTax: number
-) {
+): Promise<APIEmbed> {
   const guild = interaction?.guild as Guild;
-  const createdFields = await Promise.all(
-    podium.map(async (winnerDetails, index) => {
-      const member = (await getGuildMemberById(guild, winnerDetails.id)) as GuildMember;
-      return {
-        name: `• ${member.nickname} (${member.user.username}#${member.user.discriminator})`,
-        value: `#${index + 1} :coin: ${winnerDetails.amount}`,
-      };
-    })
-  );
-
-  if (amountTax) {
-    createdFields.push({
-      name: "Tax",
-      value: `:coin: ${amountTax}`,
-    });
-  }
-
   const owner = await getGuildMemberById(guild, lottery.ownerId);
   if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
 
+  const description: string = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
+
+  const currentPot: APIEmbedField = {
+    name: `${MONEYBAG} Current pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
+    value: "",
+  };
+
+  const winningPlayerPool: APIEmbedField = {
+    name: `${podium.length ? `${TROPHY} Winners ${TROPHY}` : ""}`,
+    value: podium.reduce((acc, winner, index) => {
+      return (acc += `${pickMedalByIndex(index)} <@!${winner.playerId}> ${COIN} ${winner.amount}\n`);
+    }, ""),
+  };
+
+  const guildTax: APIEmbedField = {
+    name: `${BANK} Guild tax ${COIN} ${amountTax}`,
+    value: "",
+  };
+
+  const fields: APIEmbedField[] = [];
+  fields.push(EMBED_BACKSLASH_N);
+  fields.push(currentPot);
+  if (podium.length) {
+    fields.push(EMBED_BACKSLASH_N);
+    fields.push(winningPlayerPool);
+  }
+  if (amountTax) {
+    fields.push(EMBED_BACKSLASH_N);
+    fields.push(guildTax);
+  }
+
   return {
     color: EMBEDS_COLOR,
-    title: `${podium.length ? "List of winners" : ""}`,
+    title: "Lottery",
     // url: 'https://discord.js.org',
     author: {
       name: `${owner.nickname ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
-      icon_url: owner.avatarURL() || DEFAULT_AVATAR_URL,
-      // url: 'https://discord.js.org',
+      icon_url: owner.user.avatar ? buildAvatarUrl(owner.id, owner.user.avatar) : DEFAULT_AVATAR_URL,
     },
-    description: `:coin: ${lottery.price}`,
+    description,
     thumbnail: {
       url: "https://i.imgur.com/aVq1dRh.png",
     },
-    fields: createdFields,
+    fields,
     // image: {
     //     url: 'https://i.imgur.com/aVq1dRh.png',
     // },
-    // timestamp: new Date().toISOString(),
+    // timestamp: new Date(lottery.endDate).toISOString(),
     // footer: {
-    //     text: 'Some footer text here',
-    //     icon_url: 'https://i.imgur.com/aVq1dRh.png',
-    // }
+    //   text: "Closing date",
+    //   icon_url: "https://i.imgur.com/aVq1dRh.png",
+    // },
   };
+}
+
+function pickMedalByIndex(index: number): string {
+  let emoji: string;
+  switch (index) {
+    case 0:
+      emoji = MEDAL_FIRST;
+      break;
+    case 1:
+      emoji = MEDAL_SECOND;
+      break;
+    case 2:
+      emoji = MEDAL_THIRD;
+      break;
+    default:
+      emoji = MEDAL;
+  }
+  return emoji;
 }
 
 export async function doAndReply(action: () => Promise<InteractionReplyOptions>, baseErrorMessage: string) {
