@@ -1,12 +1,18 @@
 {
-    "extends": "eslint:recommended",
+    "extends": [
+        "eslint:recommended",
+        "prettier"
+    ],
     "env": {
         "node": true,
         "es6": true
     },
     "parserOptions": {
         "ecmaVersion": 2022,
-        "sourceType": "module"
+        "sourceType": "module",
+        "max-len": 160
     },
-    "rules": {}
+    "rules": {
+        "@typescript-eslint/no-explicit-any": ["warn"]
+    }
 }
