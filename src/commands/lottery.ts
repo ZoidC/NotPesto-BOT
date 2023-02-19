@@ -1,11 +1,4 @@
-import {
-  ChatInputCommandInteraction,
-  Client,
-  CommandInteraction,
-  GuildMember,
-  SlashCommandBuilder,
-  User,
-} from "discord.js";
+import { ChatInputCommandInteraction, Client, GuildMember, SlashCommandBuilder } from "discord.js";
 import {
   addPlayerLottery,
   allowPlayerLottery,
@@ -118,40 +111,42 @@ const Lottery = {
     switch (subCommand) {
       case "create":
         {
-          let option: any = interaction.options.getInteger("price");
-          let option2: any = interaction.options.getInteger("duration");
+          let option: number = interaction.options.getInteger("price") || 0;
+          let option2: number = interaction.options.getInteger("duration") || 0;
           if (!option || !option2) break;
 
           answer = await doAndAnswer(
-            async () => await createLottery(client, guildId, userId, option, option2),
+            async () => await createLottery(interaction, guildId, userId, option, option2),
             `Could not create your Lottery`
           );
         }
         break;
       case "add":
         {
-          let option: any = interaction.options.getUser("user");
-          let option2: any = interaction.options.getUser("lottery-owner");
+          let option: GuildMember = interaction.options.getMember("user") as GuildMember;
+          let option2: GuildMember = interaction.options.getMember("lottery-owner") as GuildMember;
+
           answer = await doAndAnswer(
-            async () => await addPlayerLottery(client, guildId, userId, option, option2),
+            async () => await addPlayerLottery(interaction, guildId, userId, option, option2),
             `Could not add <@${option?.id}> to ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
           );
         }
         break;
       case "remove":
         {
-          let option: any = interaction.options.getUser("user");
-          let option2: any = interaction.options.getUser("lottery-owner");
+          let option: GuildMember = interaction.options.getMember("user") as GuildMember;
+          let option2: GuildMember = interaction.options.getMember("lottery-owner") as GuildMember;
+          if (!option || !option2) break;
 
           answer = await doAndAnswer(
-            async () => await removePlayerLottery(client, guildId, userId, option, option2),
+            async () => await removePlayerLottery(interaction, guildId, userId, option, option2),
             `Could not remove <@${option?.id}> from ${option2 ? `<@${option2.id}>'s` : "your"} Lottery`
           );
         }
         break;
       case "allow":
         {
-          let option: any = interaction.options.getUser("user");
+          let option: GuildMember = interaction.options.getMember("user") as GuildMember;
           answer = await doAndAnswer(
             async () => allowPlayerLottery(guildId, userId, option),
             `<@${option.id}> could not be allowed to update your Lottery`
@@ -160,7 +155,7 @@ const Lottery = {
         break;
       case "disallow":
         {
-          let option: any = interaction.options.getUser("user");
+          let option: GuildMember = interaction.options.getMember("user") as GuildMember;
           if (!option) break;
 
           answer = await doAndAnswer(
@@ -171,20 +166,20 @@ const Lottery = {
         break;
       case "show":
         {
-          let option: any = interaction.options.getUser("user");
+          let option: GuildMember = interaction.options.getMember("user") as GuildMember;
 
           answer = await doAndAnswer(
-            async () => await showLottery(client, guildId, userId, option),
+            async () => await showLottery(interaction, guildId, userId, option),
             `Could not show ${option ? `<@${option.id}>'s` : "your"} Lottery`
           );
         }
         break;
       case "roll":
         {
-          let option: any = interaction.options.getInteger("podium-size");
-          let option2: any = interaction.options.getInteger("tax");
+          let option: number = interaction.options.getInteger("podium-size") || 0;
+          let option2: number = interaction.options.getInteger("tax") || 0;
           answer = await doAndAnswer(
-            async () => await closeLottery(client, guildId, userId, option, option2),
+            async () => await closeLottery(interaction, guildId, userId, option, option2),
             `Could not roll your Lottery`
           );
         }

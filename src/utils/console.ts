@@ -21,7 +21,6 @@ function botMessage(message: string | any[]) {
 }
 
 export function squareIt(message: string | any[]) {
-  console.log();
   if (Array.isArray(message)) {
     const longestMessage = message.reduce((acc, next) => {
       return acc.length < next.length ? next : acc;

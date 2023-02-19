@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { keyv } from "./src/db/keyv-db.js";
 import { Client, Events, GatewayIntentBits } from "discord.js";
-import { compareLocalAndServerCommands, loadLocalCommands } from "./src/commands/manage/manage-commands.js";
+import { syncSlashCommands, loadLocalSlashCommands } from "./src/commands/manage/manage-commands.js";
 import { APP_ID, DISCORD_API, DISCORD_TOKEN, GUILD_ID, MONGODB_URI } from "./src/constants/env-constants.js";
 import { squareIt } from "./src/utils/console.js";
 
@@ -15,21 +15,29 @@ if (!APP_ID || !DISCORD_API || !DISCORD_TOKEN || !GUILD_ID || !MONGODB_URI) {
 keyv.on("error", (err) => console.error("Keyv connection error:", err));
 
 // Client Discord
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+});
 
 await client.login(DISCORD_TOKEN);
-console.log(await client.application?.commands.fetch({}));
-const localCommands = await loadLocalCommands();
-console.log(localCommands);
+await client.application?.commands.fetch({});
+const localSlashCommands = await loadLocalSlashCommands();
+await syncSlashCommands(localSlashCommands);
 
-client.once(Events.ClientReady, (current) => {
+client.once(Events.ClientReady, async (current) => {
   squareIt(`Logged in as <${current.user.tag}>`);
-  //   compareLocalAndServerCommands(client.commands.map((command) => command.data.toJSON()));
+  const fetchedGuilds = await client.guilds.fetch({});
+  await Promise.all(
+    Array.from(fetchedGuilds.values()).map(async (oauthGuild) => {
+      const guild = await oauthGuild.fetch();
+      return await guild.members.fetch();
+    })
+  );
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-  const command = localCommands.get(interaction.commandName);
+  const command = localSlashCommands.get(interaction.commandName);
 
   if (!command) {
     console.error(`Command <${interaction.commandName}> was not found.`);

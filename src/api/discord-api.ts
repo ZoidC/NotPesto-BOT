@@ -1,4 +1,4 @@
-import { Client, FetchGuildOptions, GuildMember } from "discord.js";
+import { Guild, GuildMember } from "discord.js";
 import { DISCORD_API, GUILD_ID } from "../constants/env-constants.js";
 import { DiscordRequest } from "./fetch.js";
 
@@ -12,9 +12,7 @@ export async function getUserById(id: string) {
   });
 }
 
-// eslint-disable-next-line no-unused-vars
-export async function getGuildMemberById(client: Client, id: string): Promise<GuildMember | null> {
-  const guild = await client.guilds.fetch({});
-  const member = client.guilds.cache.get(`${GUILD_ID}`)?.members.cache.get(id);
-  return member ? member : null;
+export async function getGuildMemberById(guild: Guild, id: string): Promise<GuildMember> {
+  const member = await guild.members.fetch(id);
+  return member;
 }

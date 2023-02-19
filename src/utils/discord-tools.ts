@@ -49,7 +49,3 @@ export function createExampleEmbed() {
     },
   };
 }
-
-export function buildAvatarUrl(userId: string, avatarId: any) {
-  return `https://cdn.discordapp.com/avatars/${userId}/${avatarId}.jpeg`;
-}

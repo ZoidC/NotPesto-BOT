@@ -1,4 +1,4 @@
-import { ApplicationAssetFormat, ApplicationCommand } from "discord.js";
+import { ApplicationAssetFormat, ApplicationCommand, SlashCommandBuilder } from "discord.js";
 import { APP_ID, DISCORD_API, GUILD_ID } from "../constants/env-constants.js";
 import { Command } from "../types/Command.js";
 import { DiscordRequest } from "./fetch.js";
@@ -11,7 +11,7 @@ export async function getGuildSlashCommands(): Promise<ApplicationCommand[]> {
   });
 }
 
-export async function postGuildSlashCommand(command: Command) {
+export async function postGuildSlashCommand(command: SlashCommandBuilder) {
   return await DiscordRequest(`${DISCORD_API}${GUILD_ENDPOINT}`, {
     method: "POST",
     body: command,
@@ -20,12 +20,11 @@ export async function postGuildSlashCommand(command: Command) {
 
 export async function deleteGuildSlashCommands() {
   const slashCommands = await getGuildSlashCommands();
-  console.log(slashCommands);
-  return;
+
   if (!slashCommands) return;
 
   await Promise.all(
-    slashCommands.map(async (command: any) => {
+    slashCommands.map(async (command) => {
       console.log(`Deleting command "${command.name}" <${command.id}>`);
       await DiscordRequest(`${DISCORD_API}${GUILD_ENDPOINT}/${command.id}`, {
         method: "DELETE",
@@ -37,14 +36,14 @@ export async function deleteGuildSlashCommands() {
 export async function deleteGuildSlashCommandById(id: string) {
   const slashCommands = await getGuildSlashCommands();
   if (slashCommands) {
-    const commandFound = slashCommands.filter((command: any) => command.id === id);
+    const commandFound = slashCommands.filter((command) => command.id === id);
     if (commandFound.length > 0) {
-      console.log(`Deleting command "${commandFound[0].name}" <${commandFound[0].id}>`);
+      console.info(`Deleting command "${commandFound[0].name}" <${commandFound[0].id}>`);
       return await DiscordRequest(`${DISCORD_API}${GUILD_ENDPOINT}/${id}`, {
         method: "DELETE",
       });
     } else {
-      console.log(`Command id <${id}> not found.`);
+      console.error(`Command id <${id}> not found.`);
     }
   }
 }

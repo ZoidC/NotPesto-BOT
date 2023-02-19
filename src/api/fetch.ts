@@ -20,8 +20,8 @@ export async function DiscordRequest(endpoint: string, options: any) {
   const jsonRes = res.status != 204 ? await res.json() : null;
 
   if (!res.ok) {
-    console.log("status :", res.status);
-    console.log(jsonRes);
+    console.error("status :", res.status);
+    console.error(jsonRes);
     throw new Error(jsonRes.message);
   }
 

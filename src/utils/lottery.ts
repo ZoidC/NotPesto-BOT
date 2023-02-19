@@ -1,9 +1,8 @@
-import { Client, Embed, EmbedData } from "discord.js";
-import { getGuildMemberById } from "../api/discord-api.js";
-import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX } from "../constants/app-constants.js";
+import { ChatInputCommandInteraction, EmbedData, Guild, GuildMember } from "discord.js";
+import { getGuildMemberById, getUserById } from "../api/discord-api.js";
+import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX, DEFAULT_AVATAR_URL } from "../constants/app-constants.js";
 import { Lottery } from "../types/Lottery.js";
 import { getXRandomItemsFromArray } from "./array.js";
-import { buildAvatarUrl } from "./discord-tools.js";
 
 // Could do some validation but.. :)
 // Make sure the total of each array equal to 1
@@ -67,10 +66,14 @@ export function handleWinnersLottery(lottery: Lottery, podiumSize: number, taxPe
 }
 
 // Embeds
-export async function buildEmbedsLottery(client: Client, lottery: Lottery): Promise<EmbedData> {
+export async function buildEmbedsLottery(
+  interaction: ChatInputCommandInteraction,
+  lottery: Lottery
+): Promise<EmbedData> {
+  const guild = interaction?.guild as Guild;
   const createdFields = await Promise.all(
     lottery.playerIds.map(async (playerId: string) => {
-      const player = await getGuildMemberById(client, playerId);
+      const player = await getGuildMemberById(guild, playerId);
       if (!player) throw Error(`Player ${playerId} not found to build lottery`);
       return {
         name: `• ${player.nickname ?? player.user.username} (${player.user.username}#${player.user.discriminator})`,
@@ -79,7 +82,7 @@ export async function buildEmbedsLottery(client: Client, lottery: Lottery): Prom
     })
   );
 
-  const owner = await getGuildMemberById(client, lottery.ownerId);
+  const owner = await getGuildMemberById(guild, lottery.ownerId);
   if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
   return {
     color: EMBEDS_COLOR,
@@ -87,7 +90,7 @@ export async function buildEmbedsLottery(client: Client, lottery: Lottery): Prom
     // url: 'https://discord.js.org',
     author: {
       name: `${owner.nickname ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
-      iconURL: buildAvatarUrl(owner.user.id, owner.user.avatarURL),
+      iconURL: owner.avatarURL() || DEFAULT_AVATAR_URL,
       // url: 'https://discord.js.org',
     },
     description: `:coin: ${lottery.price}`,
@@ -106,12 +109,19 @@ export async function buildEmbedsLottery(client: Client, lottery: Lottery): Prom
   };
 }
 
-export async function buildEmbedsWinnersLottery(client: Client, lottery: Lottery, podium: any[], amountTax: number) {
+export async function buildEmbedsWinnersLottery(
+  interaction: ChatInputCommandInteraction,
+  lottery: Lottery,
+  podium: { id: string; amount: number }[],
+  amountTax: number
+) {
+  const guild = interaction?.guild as Guild;
   const createdFields = await Promise.all(
-    podium.map(async (player, index) => {
+    podium.map(async (winnerDetails, index) => {
+      const member = (await getGuildMemberById(guild, winnerDetails.id)) as GuildMember;
       return {
-        name: `• ${player.nickname ?? player.user.username} (${player.user.username}#${player.user.discriminator})`,
-        value: `#${index + 1} :coin: ${player.amount}`,
+        name: `• ${member.nickname} (${member.user.username}#${member.user.discriminator})`,
+        value: `#${index + 1} :coin: ${winnerDetails.amount}`,
       };
     })
   );
@@ -123,7 +133,7 @@ export async function buildEmbedsWinnersLottery(client: Client, lottery: Lottery
     });
   }
 
-  const owner = await getGuildMemberById(client, lottery.ownerId);
+  const owner = await getGuildMemberById(guild, lottery.ownerId);
   if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
 
   return {
@@ -132,7 +142,7 @@ export async function buildEmbedsWinnersLottery(client: Client, lottery: Lottery
     // url: 'https://discord.js.org',
     author: {
       name: `${owner.nickname ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
-      icon_url: buildAvatarUrl(owner.user.id, owner.user.avatar),
+      icon_url: owner.avatarURL() || DEFAULT_AVATAR_URL,
       // url: 'https://discord.js.org',
     },
     description: `:coin: ${lottery.price}`,

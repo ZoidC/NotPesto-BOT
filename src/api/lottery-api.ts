@@ -1,4 +1,4 @@
-import { Client, EmbedData, GuildMember } from "discord.js";
+import { ChatInputCommandInteraction, EmbedData, GuildMember } from "discord.js";
 import { keyv } from "../db/keyv-db.js";
 import { Lottery } from "../types/Lottery.js";
 import {
@@ -54,7 +54,7 @@ async function getActiveLottery(guildId: string, userId: string) {
   return activeLottery;
 }
 
-async function setLotteries(guildId: string, userId: string, lotteries: any) {
+async function setLotteries(guildId: string, userId: string, lotteries: Lottery[]) {
   const lotteriesName = createLotteriesName(guildId, userId);
 
   try {
@@ -66,7 +66,7 @@ async function setLotteries(guildId: string, userId: string, lotteries: any) {
   return true;
 }
 
-async function updateActiveLottery(guildId: string, userId: string, updatedLottery: any) {
+async function updateActiveLottery(guildId: string, userId: string, updatedLottery: Lottery) {
   const lotteries = await getLotteries(guildId, userId);
   const newLotteries = replaceActiveLottery(lotteries, updatedLottery);
   await setLotteries(guildId, userId, newLotteries);
@@ -79,7 +79,7 @@ interface CreateLotteryResponse {
   message: string;
 }
 export async function createLottery(
-  client: Client,
+  interaction: ChatInputCommandInteraction,
   guildId: string,
   userId: string,
   price: number,
@@ -98,7 +98,7 @@ export async function createLottery(
     price: price,
   };
   const res = {
-    data: await buildEmbedsLottery(client, newLottery),
+    data: await buildEmbedsLottery(interaction, newLottery),
     message: "Lottery has been created",
   };
   let lotteries;
@@ -122,7 +122,7 @@ export async function createLottery(
 }
 
 export async function addPlayerLottery(
-  client: Client,
+  interaction: ChatInputCommandInteraction,
   guildId: string,
   userId: string,
   userToAdd: GuildMember,
@@ -140,13 +140,13 @@ export async function addPlayerLottery(
   }
 
   activeLottery.playerIds.push(userToAdd.id);
-  const data = await buildEmbedsLottery(client, activeLottery);
+  const data = await buildEmbedsLottery(interaction, activeLottery);
   await updateActiveLottery(guildId, lotteryOwner ? lotteryOwner.id : userId, activeLottery);
   return { data, message };
 }
 
 export async function removePlayerLottery(
-  client: Client,
+  interaction: ChatInputCommandInteraction,
   guildId: string,
   userId: string,
   userToRemove: GuildMember,
@@ -164,15 +164,22 @@ export async function removePlayerLottery(
   }
 
   activeLottery.playerIds = activeLottery.playerIds.filter((e) => e !== userToRemove.id);
-  const data = await buildEmbedsLottery(client, activeLottery);
+  const data = await buildEmbedsLottery(interaction, activeLottery);
   await updateActiveLottery(guildId, owner ? owner.id : userId, activeLottery);
   return { data, message };
 }
 
-export async function showLottery(client: Client, guildId: string, userId: string, owner: GuildMember) {
+export async function showLottery(
+  interaction: ChatInputCommandInteraction,
+  guildId: string,
+  userId: string,
+  owner: GuildMember
+) {
   const message = "";
   const activeLottery = await getActiveLottery(guildId, owner ? owner.id : userId);
-  const data = await buildEmbedsLottery(client, activeLottery);
+  console.log("active: ", activeLottery);
+  const data = await buildEmbedsLottery(interaction, activeLottery);
+  console.log("data:", data);
   return { data, message };
 }
 
@@ -221,7 +228,7 @@ export async function disallowPlayerLottery(guildId: string, userId: string, use
 }
 
 export async function closeLottery(
-  client: Client,
+  interaction: ChatInputCommandInteraction,
   guildId: string,
   userId: string,
   podiumSize: number,
@@ -231,7 +238,7 @@ export async function closeLottery(
   const { podium, amountTax, message } = handleWinnersLottery(activeLottery, podiumSize, taxPercent);
 
   activeLottery.active = false;
-  const data = await buildEmbedsWinnersLottery(client, activeLottery, podium, amountTax);
+  const data = await buildEmbedsWinnersLottery(interaction, activeLottery, podium, amountTax);
   await updateActiveLottery(guildId, userId, activeLottery);
   return { data, message };
 }
