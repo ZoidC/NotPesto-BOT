@@ -2,7 +2,7 @@ import { ChatInputCommandInteraction, Client, Interaction, SlashCommandBuilder }
 
 const Cgn = {
   data: new SlashCommandBuilder().setName("cgn").setDescription("Best player UK"),
-  async execute(client: Client, interaction: ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) {
       await interaction.reply("Error!");
       return;

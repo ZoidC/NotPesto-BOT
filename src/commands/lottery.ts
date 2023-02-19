@@ -106,7 +106,7 @@ const Lottery = {
           option.setName("tax").setDescription("Set the tax in % (0 to 100)").setMinValue(0).setMaxValue(100)
         )
     ),
-  async execute(client: Client, interaction: ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction) {
     const subCommand = interaction.options.getSubcommand();
     const guildId = interaction.guildId;
     const userId = interaction.user.id;
