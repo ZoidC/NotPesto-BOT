@@ -13,21 +13,6 @@ import {
   replaceActiveLottery,
 } from "../utils/lottery.js";
 
-// KEYV_LOTTERIES_PREFIX + "_" + GUILD_ID + "_" + USER_ID
-// [
-//     {
-//         active: true,
-//         createDate: "",
-//         updateDate: "",
-//         endDate: "",
-//         guildId: "",
-//         ownerId: "",
-//         allowedUserIds: [],
-//         players: [],
-//         price: 0
-//     }
-// ];
-
 async function getLotteries(guildId: string, userId: string): Promise<Lottery[]> {
   const lotteriesName = createLotteriesName(guildId, userId);
   let lotteries;
@@ -37,7 +22,6 @@ async function getLotteries(guildId: string, userId: string): Promise<Lottery[]>
     // Triggers when the db entry doesn't exist yet
     if (!lotteries) throw new Error();
   } catch (e) {
-    // throw new Error("could not get the Lotteries");
     throw new Error("there is no active Lottery");
   }
 

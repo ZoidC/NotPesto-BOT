@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, EmbedData, Guild, GuildMember } from "discord.js";
-import { getGuildMemberById, getUserById } from "../api/discord-api.js";
+import { getGuildMemberById } from "../api/discord-api.js";
 import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX, DEFAULT_AVATAR_URL } from "../constants/app-constants.js";
 import { Lottery } from "../types/Lottery.js";
 import { getXRandomItemsFromArray } from "./array.js";

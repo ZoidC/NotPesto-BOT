@@ -5,7 +5,7 @@
     "main": "app.js",
     "type": "module",
     "scripts": {
-        "start": "node-ts app.ts",
+        "start": "ts-node --esm ./app.ts",
         "dev": "nodemon --esm app.ts",
         "lint": "eslint --fix --ext .ts && prettier --write ./**/*.ts"
     },
