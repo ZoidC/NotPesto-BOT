@@ -1,4 +1,11 @@
-import { ChatInputCommandInteraction, EmbedData, Guild, GuildMember } from "discord.js";
+import {
+  APIEmbed,
+  APIEmbedField,
+  ChatInputCommandInteraction,
+  Guild,
+  GuildMember,
+  InteractionReplyOptions,
+} from "discord.js";
 import { getGuildMemberById } from "../api/discord-api.js";
 import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX, DEFAULT_AVATAR_URL } from "../constants/app-constants.js";
 import { Lottery } from "../types/Lottery.js";
@@ -66,12 +73,9 @@ export function handleWinnersLottery(lottery: Lottery, podiumSize: number, taxPe
 }
 
 // Embeds
-export async function buildEmbedsLottery(
-  interaction: ChatInputCommandInteraction,
-  lottery: Lottery
-): Promise<EmbedData> {
+export async function buildEmbedLottery(interaction: ChatInputCommandInteraction, lottery: Lottery): Promise<APIEmbed> {
   const guild = interaction?.guild as Guild;
-  const createdFields = await Promise.all(
+  const createdFields: APIEmbedField[] = await Promise.all(
     lottery.playerIds.map(async (playerId: string) => {
       const player = await getGuildMemberById(guild, playerId);
       if (!player) throw Error(`Player ${playerId} not found to build lottery`);
@@ -90,8 +94,7 @@ export async function buildEmbedsLottery(
     // url: 'https://discord.js.org',
     author: {
       name: `${owner.nickname ?? owner.user.username} (${owner.user.username}#${owner.user.discriminator})`,
-      iconURL: owner.avatarURL() || DEFAULT_AVATAR_URL,
-      // url: 'https://discord.js.org',
+      icon_url: owner.avatarURL() || DEFAULT_AVATAR_URL,
     },
     description: `:coin: ${lottery.price}`,
     thumbnail: {
@@ -109,7 +112,7 @@ export async function buildEmbedsLottery(
   };
 }
 
-export async function buildEmbedsWinnersLottery(
+export async function buildEmbedWinnersLottery(
   interaction: ChatInputCommandInteraction,
   lottery: Lottery,
   podium: { id: string; amount: number }[],
@@ -161,16 +164,12 @@ export async function buildEmbedsWinnersLottery(
   };
 }
 
-export async function doAndAnswer(action: () => any, baseErrorMessage: string) {
-  let answer;
+export async function doAndReply(action: () => Promise<InteractionReplyOptions>, baseErrorMessage: string) {
+  let answer: InteractionReplyOptions;
   try {
-    const res = await action();
-    answer = {
-      content: res.message,
-      ...(res.data && { embeds: [res.data] }),
-    };
+    answer = await action();
   } catch (e: any) {
-    answer = `${baseErrorMessage}, ${e.message}`;
+    answer = { content: `${baseErrorMessage}, ${e.message}` };
   }
   return answer;
 }
