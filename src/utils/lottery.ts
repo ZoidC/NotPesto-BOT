@@ -8,7 +8,17 @@ import {
 } from "discord.js";
 import { getGuildMemberById } from "../api/discord-api.js";
 import { EMBEDS_COLOR, KEYV_LOTTERIES_PREFIX, DEFAULT_AVATAR_URL } from "../constants/app-constants.js";
-import { BANK, COIN, MEDAL, MEDAL_FIRST, MEDAL_SECOND, MEDAL_THIRD, TROPHY } from "../constants/discord-constants.js";
+import {
+  BANK,
+  COIN,
+  MEDAL,
+  MEDAL_FIRST,
+  MEDAL_SECOND,
+  MEDAL_THIRD,
+  MONEYBAG,
+  TICKET,
+  TROPHY,
+} from "../constants/discord-constants.js";
 import { Lottery, Winner } from "../types/Lottery.js";
 import { getXRandomItemsFromArray } from "./array.js";
 import { buildAvatarUrl } from "./discord-tools.js";
@@ -65,7 +75,7 @@ export function handleWinnersLottery(lottery: Lottery, podiumSize: number, taxPe
   const winners = getXRandomItemsFromArray(lottery.playerIds, realPodiumSize);
   let message = `${winners.length ? "Congratulations to" : ""}`;
   const podium = winners.map((player, index, array) => {
-    message += ` #${index + 1} <@${player}>`;
+    message += ` ${pickMedalByIndex(index)} <@${player}>`;
     const winner: Winner = {
       playerId: player,
       amount: amountWinners * WINNING_DISTRIBUTION[array.length - 1][index],
@@ -84,34 +94,29 @@ const EMBED_BACKSLASH_N: APIEmbedField = {
 
 export async function buildEmbedLottery(interaction: ChatInputCommandInteraction, lottery: Lottery): Promise<APIEmbed> {
   const guild = interaction?.guild as Guild;
-  const playersList: string[] = await Promise.all(
-    lottery.playerIds.map(async (playerId: string) => {
-      const player = await getGuildMemberById(guild, playerId);
-      if (!player) {
-        console.error(`Player ${playerId} not found to build lottery`);
-        return "Unknown player";
-      }
-      const playerName = `${player.nickname ?? player.user.username}`;
-      const playerTag = `${player.user.username}#${player.user.discriminator}`;
-      return `${playerName} (${playerTag})`;
-    })
-  );
+  const owner = await getGuildMemberById(guild, lottery.ownerId);
+  if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
+
+  const description: string = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
+
+  const currentPot: APIEmbedField = {
+    name: `${MONEYBAG} Current pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
+    value: "",
+  };
 
   const playerPool: APIEmbedField = {
-    name: `${playersList.length ? "Players" : ""}`,
-    value: playersList.reduce((acc, player) => (acc += `• ${player}\n`), ""),
+    name: `${lottery.playerIds.length ? "Players" : ""}`,
+    value: lottery.playerIds.reduce((acc, playerId) => (acc += `<@!${playerId}>\n`), ""),
   };
 
   const fields: APIEmbedField[] = [];
   fields.push(EMBED_BACKSLASH_N);
-  fields.push(playerPool);
-
-  let description: string = "";
-  description += `${COIN} Ticket price : ${lottery.price}\n`;
-  description += `${COIN} Current pool : ${lottery.playerIds.length * lottery.price}`;
-
-  const owner = await getGuildMemberById(guild, lottery.ownerId);
-  if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
+  fields.push(currentPot);
+  fields.push(EMBED_BACKSLASH_N);
+  if (lottery.playerIds.length) {
+    fields.push(playerPool);
+    fields.push(EMBED_BACKSLASH_N);
+  }
 
   return {
     color: EMBEDS_COLOR,
@@ -144,56 +149,39 @@ export async function buildEmbedWinnersLottery(
   amountTax: number
 ): Promise<APIEmbed> {
   const guild = interaction?.guild as Guild;
-
-  let description: string = "";
-  description += `${COIN} Ticket price : ${lottery.price}\n`;
-  description += `${COIN} Current pool : ${lottery.playerIds.length * lottery.price}`;
-  if (amountTax) {
-    description += `\n${BANK} Guild tax : ${amountTax}`;
-  }
-
-  const winningPlayersList: string[] = await Promise.all(
-    podium.map(async (winner: Winner) => {
-      const player = await getGuildMemberById(guild, winner.playerId);
-      if (!player) {
-        console.error(`Player ${winner.playerId} not found to build lottery`);
-        return "Unknown player";
-      }
-      const playerName = `${player.nickname ?? player.user.username}`;
-      const playerTag = `${player.user.username}#${player.user.discriminator}`;
-      return `${playerName} (${playerTag}) ${COIN} ${winner.amount}`;
-    })
-  );
-
-  const winningPlayerPool: APIEmbedField = {
-    name: `${winningPlayersList.length ? `${TROPHY} Winners ${TROPHY}` : ""}`,
-    value: winningPlayersList.reduce((acc, player, index) => {
-      let emoji: string;
-      switch (index) {
-        case 0:
-          emoji = MEDAL_FIRST;
-          break;
-        case 1:
-          emoji = MEDAL_SECOND;
-          break;
-        case 2:
-          emoji = MEDAL_THIRD;
-          break;
-        default:
-          emoji = MEDAL;
-      }
-      return (acc += `${emoji} ${player}\n`);
-    }, ""),
-  };
-
-  const fields: APIEmbedField[] = [];
-  if (winningPlayersList.length) fields.push(EMBED_BACKSLASH_N);
-  fields.push(winningPlayerPool);
-
   const owner = await getGuildMemberById(guild, lottery.ownerId);
   if (!owner) throw Error(`Player ${lottery.ownerId} not found to build lottery`);
 
-  // ${podium.length ? "List of winners" : ""}
+  const description: string = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
+
+  const currentPot: APIEmbedField = {
+    name: `${MONEYBAG} Current pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
+    value: "",
+  };
+
+  const winningPlayerPool: APIEmbedField = {
+    name: `${podium.length ? `${TROPHY} Winners ${TROPHY}` : ""}`,
+    value: podium.reduce((acc, winner, index) => {
+      return (acc += `${pickMedalByIndex(index)} <@!${winner.playerId}> ${COIN} ${winner.amount}\n`);
+    }, ""),
+  };
+
+  const guildTax: APIEmbedField = {
+    name: `${BANK} Guild tax ${COIN} ${amountTax}`,
+    value: "",
+  };
+
+  const fields: APIEmbedField[] = [];
+  fields.push(EMBED_BACKSLASH_N);
+  fields.push(currentPot);
+  if (podium.length) {
+    fields.push(EMBED_BACKSLASH_N);
+    fields.push(winningPlayerPool);
+  }
+  if (amountTax) {
+    fields.push(EMBED_BACKSLASH_N);
+    fields.push(guildTax);
+  }
 
   return {
     color: EMBEDS_COLOR,
@@ -217,6 +205,24 @@ export async function buildEmbedWinnersLottery(
     //   icon_url: "https://i.imgur.com/aVq1dRh.png",
     // },
   };
+}
+
+function pickMedalByIndex(index: number): string {
+  let emoji: string;
+  switch (index) {
+    case 0:
+      emoji = MEDAL_FIRST;
+      break;
+    case 1:
+      emoji = MEDAL_SECOND;
+      break;
+    case 2:
+      emoji = MEDAL_THIRD;
+      break;
+    default:
+      emoji = MEDAL;
+  }
+  return emoji;
 }
 
 export async function doAndReply(action: () => Promise<InteractionReplyOptions>, baseErrorMessage: string) {
