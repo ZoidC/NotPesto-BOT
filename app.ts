@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { keyv } from "./src/db/keyv-db.js";
-import { Client, Events, GatewayIntentBits } from "discord.js";
+import { ChatInputCommandInteraction, Client, Events, GatewayIntentBits, Interaction } from "discord.js";
 import { syncSlashCommands, loadLocalSlashCommands } from "./src/commands/manage/manage-commands.js";
 import { APP_ID, DISCORD_API, DISCORD_TOKEN, GUILD_ID, MONGODB_URI } from "./src/constants/env-constants.js";
 import { squareIt } from "./src/utils/console.js";
@@ -16,7 +16,12 @@ keyv.on("error", (err) => console.error("Keyv connection error:", err));
 
 // Client Discord
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
+  ],
 });
 
 await client.login(DISCORD_TOKEN);
