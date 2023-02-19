@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ApplicationCommand, Collection } from "discord.js";
+import { Collection } from "discord.js";
 import { COMMANDS_FOLDER } from "../../constants/app-constants.js";
 import { getGuildSlashCommands, postGuildSlashCommand } from "../../api/command-api.js";
 import { squareIt } from "../../utils/console.js";
