@@ -27,7 +27,7 @@ const Lottery = {
         .setDescription("Create my new lottery")
         // <Price>
         .addIntegerOption((option) =>
-          option.setName("price").setDescription("Set the inscription price").setRequired(true)
+          option.setName("ticket-price").setDescription("Set the ticket price").setRequired(true)
         )
         // <Duration>
         .addIntegerOption((option) =>
@@ -117,7 +117,7 @@ const Lottery = {
     switch (subCommand) {
       case "create":
         {
-          let option: number = interaction.options.getInteger("price") || 0;
+          let option: number = interaction.options.getInteger("ticket-price") || 0;
           let option2: number = interaction.options.getInteger("duration") || 0;
           if (!option || !option2) break;
 
