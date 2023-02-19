@@ -155,7 +155,7 @@ export async function buildEmbedWinnersLottery(
   const description: string = `${TICKET} Ticket price ${COIN} ${lottery.price}`;
 
   const currentPot: APIEmbedField = {
-    name: `${MONEYBAG} Current pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
+    name: `${MONEYBAG} Pot ${COIN} ${lottery.playerIds.length * lottery.price}`,
     value: "",
   };
 
