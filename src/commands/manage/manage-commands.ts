@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ApplicationCommand, Collection } from "discord.js";
+import { Collection } from "discord.js";
 import { COMMANDS_FOLDER } from "../../constants/app-constants.js";
 import { getGuildSlashCommands, postGuildSlashCommand } from "../../api/command-api.js";
 import { squareIt } from "../../utils/console.js";
@@ -13,14 +13,8 @@ export async function loadLocalSlashCommands(): Promise<Collection<string, Comma
   const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".ts"));
 
   for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
     const command: Command = (await import(`../${file}`)).default;
-
-    if ("data" in command && "execute" in command) {
-      commands.set(command.data.name, command);
-    } else {
-      console.warn(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-    }
+    commands.set(command.data.name, command);
   }
 
   return commands;
@@ -39,8 +33,8 @@ export async function syncSlashCommands(localCommands: Collection<string, Comman
       );
       squareIt(messages);
     }
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(e);
   }
 }
 

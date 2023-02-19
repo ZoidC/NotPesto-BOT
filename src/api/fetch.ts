@@ -1,6 +1,6 @@
 import { DISCORD_TOKEN } from "../constants/env-constants.js";
 
-export async function DiscordRequest(endpoint: string, options: any) {
+export async function DiscordRequest(endpoint: RequestInfo, options: RequestInit) {
   let res;
   const url = endpoint;
   if (options.body) options.body = JSON.stringify(options.body);

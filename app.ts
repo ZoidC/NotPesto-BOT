@@ -20,20 +20,21 @@ const client = new Client({
 });
 
 await client.login(DISCORD_TOKEN);
-await client.application?.commands.fetch({});
-const localSlashCommands = await loadLocalSlashCommands();
-await syncSlashCommands(localSlashCommands);
 
 client.once(Events.ClientReady, async (current) => {
   squareIt(`Logged in as <${current.user.tag}>`);
-  const fetchedGuilds = await client.guilds.fetch({});
-  await Promise.all(
-    Array.from(fetchedGuilds.values()).map(async (oauthGuild) => {
-      const guild = await oauthGuild.fetch();
-      return await guild.members.fetch();
-    })
-  );
+  //   const fetchedGuilds = await client.guilds.fetch({});
+  //   await Promise.all(
+  //     Array.from(fetchedGuilds.values()).map(async (oauthGuild) => {
+  //       const guild = await oauthGuild.fetch();
+  //       return await guild.members.fetch();
+  //     })
+  //   );
 });
+
+await client.application?.commands.fetch({});
+const localSlashCommands = await loadLocalSlashCommands();
+await syncSlashCommands(localSlashCommands);
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
@@ -46,8 +47,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   try {
     await command.execute(client, interaction);
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
     // ephemeral: true means only the user who did the command sees the reply
     await interaction.reply({ content: "Bip? Boup! .. **BONK** .. *dead*", ephemeral: true });
   }

@@ -49,3 +49,8 @@ export function createExampleEmbed() {
     },
   };
 }
+
+// GuildMember.avatarURL() doesn't work :(
+export function buildAvatarUrl(userId: string, avatarId: string) {
+  return `https://cdn.discordapp.com/avatars/${userId}/${avatarId}.jpeg`;
+}

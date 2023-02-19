@@ -1,4 +1,4 @@
-function topMessage(message: string | any[]) {
+function topMessage(message: string | string[]) {
   let line = "╔═";
   for (let i = 0; i < message.length; i++) {
     message[i] == "║" ? (line += "╦") : (line += "═");
@@ -7,11 +7,11 @@ function topMessage(message: string | any[]) {
   return line;
 }
 
-function aroundMessage(message: string | any[], size = message.length) {
+function aroundMessage(message: string | string[], size = message.length) {
   return `║ ${message}${" ".repeat(size - message.length)} ║`;
 }
 
-function botMessage(message: string | any[]) {
+function botMessage(message: string | string[]) {
   let line = "╚═";
   for (let i = 0; i < message.length; i++) {
     message[i] == "║" ? (line += "╩") : (line += "═");
@@ -20,7 +20,7 @@ function botMessage(message: string | any[]) {
   return line;
 }
 
-export function squareIt(message: string | any[]) {
+export function squareIt(message: string | string[]) {
   if (Array.isArray(message)) {
     const longestMessage = message.reduce((acc, next) => {
       return acc.length < next.length ? next : acc;

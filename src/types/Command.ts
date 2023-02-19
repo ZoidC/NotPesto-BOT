@@ -2,5 +2,5 @@ import { CommandInteraction, ChatInputApplicationCommandData, Client, SlashComma
 
 export interface Command extends ChatInputApplicationCommandData {
   data: SlashCommandBuilder;
-  execute: (client: Client, interaction: CommandInteraction) => void;
+  execute: (client: Client, interaction: CommandInteraction) => Promise<void>;
 }

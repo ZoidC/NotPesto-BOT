@@ -1,6 +1,5 @@
 import { ApplicationAssetFormat, ApplicationCommand, SlashCommandBuilder } from "discord.js";
 import { APP_ID, DISCORD_API, GUILD_ID } from "../constants/env-constants.js";
-import { Command } from "../types/Command.js";
 import { DiscordRequest } from "./fetch.js";
 
 const GUILD_ENDPOINT = `/applications/${APP_ID}/guilds/${GUILD_ID}/commands`;
@@ -14,7 +13,7 @@ export async function getGuildSlashCommands(): Promise<ApplicationCommand[]> {
 export async function postGuildSlashCommand(command: SlashCommandBuilder) {
   return await DiscordRequest(`${DISCORD_API}${GUILD_ENDPOINT}`, {
     method: "POST",
-    body: command,
+    body: command as unknown as BodyInit,
   });
 }
 

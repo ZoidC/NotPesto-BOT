@@ -1,9 +1,9 @@
-import { ChatInputCommandInteraction, EmbedData, GuildMember } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, InteractionReplyOptions } from "discord.js";
 import { keyv } from "../db/keyv-db.js";
 import { Lottery } from "../types/Lottery.js";
 import {
-  buildEmbedsLottery,
-  buildEmbedsWinnersLottery,
+  buildEmbedLottery,
+  buildEmbedWinnersLottery,
   createLotteriesName,
   handleWinnersLottery,
   hasActiveLottery,
@@ -58,32 +58,29 @@ async function updateActiveLottery(guildId: string, userId: string, updatedLotte
   return true;
 }
 
-interface CreateLotteryResponse {
-  data: EmbedData;
-  message: string;
-}
 export async function createLottery(
   interaction: ChatInputCommandInteraction,
   guildId: string,
   userId: string,
   price: number,
   duration: number
-): Promise<CreateLotteryResponse> {
-  const newDate = new Date();
+): Promise<InteractionReplyOptions> {
+  const newDate = new Date().getTime();
   const newLottery: Lottery = {
     active: true,
     createDate: newDate,
     updateDate: newDate,
-    endDate: new Date(newDate.getTime() + duration * 24 * 60 * 60 * 1000),
+    // Maybe substract hours if needed
+    endDate: newDate + duration * 24 * 60 * 60 * 1000,
     guildId: guildId,
     ownerId: userId,
     allowedUserIds: [],
     playerIds: [],
     price: price,
   };
-  const res = {
-    data: await buildEmbedsLottery(interaction, newLottery),
-    message: "Lottery has been created",
+  const res: InteractionReplyOptions = {
+    embeds: [await buildEmbedLottery(interaction, newLottery)],
+    content: "Lottery has been created",
   };
   let lotteries;
 
@@ -111,7 +108,10 @@ export async function addPlayerLottery(
   userId: string,
   userToAdd: GuildMember,
   lotteryOwner: GuildMember
-): Promise<any> {
+): Promise<InteractionReplyOptions> {
+  const res: InteractionReplyOptions = {
+    content: `<@${userToAdd.id}> has been added to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "your"} Lottery`,
+  };
   const message = `<@${userToAdd.id}> has been added to ${lotteryOwner ? `<@${lotteryOwner.id}>'s` : "your"} Lottery`;
   const activeLottery = await getActiveLottery(guildId, lotteryOwner ? lotteryOwner.id : userId);
 
@@ -124,9 +124,9 @@ export async function addPlayerLottery(
   }
 
   activeLottery.playerIds.push(userToAdd.id);
-  const data = await buildEmbedsLottery(interaction, activeLottery);
+  res.embeds = [await buildEmbedLottery(interaction, activeLottery)];
   await updateActiveLottery(guildId, lotteryOwner ? lotteryOwner.id : userId, activeLottery);
-  return { data, message };
+  return res;
 }
 
 export async function removePlayerLottery(
@@ -135,8 +135,10 @@ export async function removePlayerLottery(
   userId: string,
   userToRemove: GuildMember,
   owner: GuildMember
-) {
-  const message = `<@${userToRemove.id}> has been removed from ${owner ? `<@${owner.id}>'s` : "your"} Lottery`;
+): Promise<InteractionReplyOptions> {
+  const res: InteractionReplyOptions = {
+    content: `<@${userToRemove.id}> has been removed from ${owner ? `<@${owner.id}>'s` : "your"} Lottery`,
+  };
   const activeLottery = await getActiveLottery(guildId, owner ? owner.id : userId);
 
   if (!isAllowedToUpdate(activeLottery, userId)) {
@@ -148,9 +150,9 @@ export async function removePlayerLottery(
   }
 
   activeLottery.playerIds = activeLottery.playerIds.filter((e) => e !== userToRemove.id);
-  const data = await buildEmbedsLottery(interaction, activeLottery);
+  res.embeds = [await buildEmbedLottery(interaction, activeLottery)];
   await updateActiveLottery(guildId, owner ? owner.id : userId, activeLottery);
-  return { data, message };
+  return res;
 }
 
 export async function showLottery(
@@ -158,23 +160,26 @@ export async function showLottery(
   guildId: string,
   userId: string,
   owner: GuildMember
-) {
-  const message = "";
+): Promise<InteractionReplyOptions> {
+  const res: InteractionReplyOptions = {
+    content: "",
+  };
   const activeLottery = await getActiveLottery(guildId, owner ? owner.id : userId);
-  console.log("active: ", activeLottery);
-  const data = await buildEmbedsLottery(interaction, activeLottery);
-  console.log("data:", data);
-  return { data, message };
+  res.embeds = [await buildEmbedLottery(interaction, activeLottery)];
+  return res;
 }
 
-export async function allowPlayerLottery(guildId: string, userId: string, userToAllow: GuildMember) {
-  const res = {
-    data: null,
-    message: `<@${userToAllow.id}> has been allowed to udate your Lottery`,
+export async function allowPlayerLottery(
+  guildId: string,
+  userId: string,
+  userToAllow: GuildMember
+): Promise<InteractionReplyOptions> {
+  const res: InteractionReplyOptions = {
+    content: `<@${userToAllow.id}> has been allowed to udate your Lottery`,
   };
 
   if (userId === userToAllow.id) {
-    res.message = "You are the owner...";
+    res.content = "You are the owner...";
     return res;
   }
 
@@ -189,14 +194,17 @@ export async function allowPlayerLottery(guildId: string, userId: string, userTo
   return res;
 }
 
-export async function disallowPlayerLottery(guildId: string, userId: string, userToDisallow: GuildMember) {
-  const res = {
-    data: null,
-    message: `<@${userToDisallow.id}> has been disallowed to udate your Lottery`,
+export async function disallowPlayerLottery(
+  guildId: string,
+  userId: string,
+  userToDisallow: GuildMember
+): Promise<InteractionReplyOptions> {
+  const res: InteractionReplyOptions = {
+    content: `<@${userToDisallow.id}> has been disallowed to udate your Lottery`,
   };
 
   if (userId === userToDisallow.id) {
-    res.message = "You are the owner...";
+    res.content = "You are the owner...";
     return res;
   }
 
@@ -217,12 +225,14 @@ export async function closeLottery(
   userId: string,
   podiumSize: number,
   taxPercent: number
-) {
+): Promise<InteractionReplyOptions> {
   const activeLottery = await getActiveLottery(guildId, userId);
   const { podium, amountTax, message } = handleWinnersLottery(activeLottery, podiumSize, taxPercent);
-
+  const res: InteractionReplyOptions = {
+    content: message,
+  };
   activeLottery.active = false;
-  const data = await buildEmbedsWinnersLottery(interaction, activeLottery, podium, amountTax);
+  res.embeds = [await buildEmbedWinnersLottery(interaction, activeLottery, podium, amountTax)];
   await updateActiveLottery(guildId, userId, activeLottery);
-  return { data, message };
+  return res;
 }
