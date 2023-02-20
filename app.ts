@@ -14,6 +14,7 @@ if (!APP_ID || !DISCORD_API || !DISCORD_TOKEN || !GUILD_ID || !MONGODB_URI) {
 // Database
 keyv.on("error", (err) => {
   console.error("Keyv connection error:", err);
+  const pepe: boolean = "true";
 });
 
 // Client Discord
