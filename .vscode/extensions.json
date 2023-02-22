@@ -1,6 +1,6 @@
 {
     "recommendations": [
-        "rvest.vs-code-prettier-eslint",
-        "dbaeumer.vscode-eslint"
+        "dbaeumer.vscode-eslint", // ESLint
+        "rvest.vs-code-prettier-eslint", // Prettier ESLint
     ]
 }
