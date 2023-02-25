@@ -14,18 +14,18 @@ const isFlagId = indexId > -1;
 const isFlagIdAndValue = isFlagId && process.argv.length > indexId + 1;
 
 if (!isFlagAll && !isFlagId) {
-  console.log("Missing flag --all or --id");
-  process.exit();
+	console.log("Missing flag --all or --id");
+	process.exit();
 }
 
 if (isFlagAll) {
-  await deleteGuildSlashCommands();
-  process.exit();
+	await deleteGuildSlashCommands();
+	process.exit();
 }
 
 if (!isFlagIdAndValue) {
-  console.log("Missing <id> behind the flag --id");
-  process.exit();
+	console.log("Missing <id> behind the flag --id");
+	process.exit();
 }
 
 const commandId = process.argv[indexId + 1];

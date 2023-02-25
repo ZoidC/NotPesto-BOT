@@ -1,18 +1,25 @@
 {
-    "extends": [
-        "eslint:recommended",
-        "prettier"
-    ],
     "env": {
-        "node": true,
-        "es6": true
+        "es2021": true,
+        "node": true
     },
+    "extends": [
+        // https://github.com/eslint/eslint/blob/main/conf/eslint-recommended.js
+        "eslint:recommended",   
+        // https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/eslint-recommended.ts
+        "plugin:@typescript-eslint/recommended" 
+    ],
+    "overrides": [],
+    "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": 2022,
+        "ecmaVersion": "latest",
         "sourceType": "module",
-        "max-len": 160
+        "project": "./tsconfig.json"
     },
-    "rules": {
-        "@typescript-eslint/no-explicit-any": ["warn"]
-    }
+    "plugins": [
+        // https://typescript-eslint.io/getting-started/
+        "@typescript-eslint"
+    ],
+    "rules": {},
+    "root": true
 }

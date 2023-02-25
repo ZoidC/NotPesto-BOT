@@ -8,3 +8,6 @@ logo
 # Test
 test.ts
 dump
+
+# utils
+.eslintcache
